@@ -1,0 +1,126 @@
+TÉRMINOS Y CONDICIONES DE USO
+Sistema de Gestión POS
+
+Última actualización: 26 de julio de 2026
+
+Al instalar, activar o utilizar este software, usted ("el Usuario") acepta los
+siguientes términos y condiciones en su totalidad. Si no está de acuerdo con
+alguno de estos términos, debe abstenerse de instalar o utilizar el software.
+
+1. PROPIEDAD DEL SOFTWARE
+
+Sistema de Gestión POS (en adelante, "el Software") es un producto de software
+propietario, desarrollado y de titularidad exclusiva de su desarrollador
+(en adelante, "el Desarrollador"). Todos los derechos de autor, código fuente,
+diseño, marca, y demás elementos que componen el Software son propiedad
+exclusiva del Desarrollador, protegidos por las leyes de propiedad intelectual
+aplicables.
+
+2. LICENCIA DE USO
+
+2.1. El Desarrollador otorga al Usuario una licencia limitada, no exclusiva,
+no transferible e intransferible para utilizar el Software, únicamente en los
+términos descritos en este documento y sujeta a la activación mediante un
+código de licencia válido, emitido exclusivamente por el Desarrollador.
+
+2.2. Esta licencia es de uso personal o empresarial para el negocio en el que
+fue instalada, y está vinculada a un único código de activación por
+instalación. El uso del Software en instalaciones adicionales requiere la
+adquisición de licencias adicionales.
+
+2.3. La presente licencia no constituye una venta del Software. El Usuario no
+adquiere ningún derecho de propiedad sobre el Software, su código fuente, ni
+ninguno de sus componentes.
+
+3. RESTRICCIONES
+
+Queda expresamente prohibido, salvo autorización previa y por escrito del
+Desarrollador:
+
+  a) Modificar, alterar, descompilar, realizar ingeniería inversa,
+     desensamblar, o intentar de cualquier forma extraer o acceder al código
+     fuente del Software.
+
+  b) Copiar, redistribuir, sublicenciar, arrendar, revender, o comercializar
+     el Software, en su totalidad o en parte, ya sea de forma gratuita u
+     onerosa, a través de cualquier medio o plataforma.
+
+  c) Eliminar, ocultar o alterar cualquier aviso de propiedad intelectual,
+     marca, o identificación del Desarrollador presente en el Software.
+
+  d) Compartir, transferir o ceder códigos de activación a terceros no
+     autorizados, o utilizar un mismo código de activación en más de una
+     instalación sin autorización expresa del Desarrollador.
+
+  e) Utilizar el Software para desarrollar un producto competidor o
+     sustancialmente similar.
+
+El incumplimiento de cualquiera de estas restricciones constituye una
+violación grave de esta licencia y podrá dar lugar a la revocación inmediata
+y sin previo aviso de la licencia otorgada, sin perjuicio de las acciones
+legales que correspondan.
+
+4. VALIDACIÓN Y ACTIVACIÓN
+
+4.1. El Software requiere de un código de activación válido, generado y
+autorizado exclusivamente por el Desarrollador, para su funcionamiento
+completo más allá del período de prueba gratuito inicial.
+
+4.2. La validación de los códigos de activación se realiza mediante un
+sistema en línea. El Usuario reconoce y acepta que, para activar el Software,
+se requiere de una conexión a internet en el momento de la activación.
+
+4.3. El Desarrollador se reserva el derecho de invalidar códigos de
+activación que hayan sido obtenidos, compartidos o utilizados de forma
+contraria a lo establecido en estos términos.
+
+5. PROPIEDAD DE LOS DATOS
+
+Los datos generados por el Usuario durante el uso del Software (inventario,
+ventas, clientes, y demás información operativa de su negocio) son de
+exclusiva propiedad del Usuario. El Desarrollador no accede, recopila, ni
+almacena dicha información en sus propios sistemas, salvo la información
+estrictamente necesaria para la validación de licencias.
+
+6. GARANTÍAS Y LIMITACIÓN DE RESPONSABILIDAD
+
+6.1. El Software se proporciona "tal cual" ("as is"), sin garantías de
+ningún tipo, expresas o implícitas, incluyendo pero no limitándose a
+garantías de comerciabilidad, idoneidad para un propósito particular, o
+ausencia de errores.
+
+6.2. El Desarrollador no será responsable por daños directos, indirectos,
+incidentales, o consecuentes derivados del uso o la imposibilidad de uso del
+Software, incluyendo pérdida de datos o de ganancias, salvo en los casos en
+que la legislación aplicable no permita dicha limitación.
+
+7. ACTUALIZACIONES Y SOPORTE
+
+El Desarrollador podrá, a su sola discreción, ofrecer actualizaciones,
+mejoras o soporte técnico para el Software. La disponibilidad, alcance y
+condiciones de dicho soporte no están garantizadas por estos términos y
+podrán ser objeto de acuerdos comerciales separados.
+
+8. TERMINACIÓN
+
+El Desarrollador podrá dar por terminada esta licencia de forma inmediata en
+caso de incumplimiento de cualquiera de estos términos por parte del Usuario.
+Al terminar la licencia, el Usuario deberá cesar todo uso del Software.
+
+9. MODIFICACIONES A ESTOS TÉRMINOS
+
+El Desarrollador se reserva el derecho de modificar estos términos y
+condiciones en cualquier momento. Las modificaciones serán efectivas para
+nuevas instalaciones o activaciones del Software a partir de su publicación.
+
+10. ACEPTACIÓN
+
+Al hacer clic en "Acepto" durante el proceso de instalación, o al utilizar el
+Software de cualquier forma, el Usuario declara haber leído, comprendido y
+aceptado la totalidad de estos términos y condiciones.
+
+---
+
+Para consultas relacionadas con esta licencia, contactar al Desarrollador:
+Email: desarrollosescritorio4@gmail.com
+Teléfono: +51 910 372 220

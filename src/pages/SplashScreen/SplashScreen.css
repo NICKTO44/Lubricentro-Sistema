@@ -1,0 +1,366 @@
+/* SplashScreen.css */
+/* Estilos para la pantalla de bienvenida/recordatorio del trial */
+
+/* ========================================
+   OVERLAY Y CONTENEDOR PRINCIPAL
+   ======================================== */
+
+.splash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Fondo unificado — la diferencia de severidad ahora vive en el ícono, no en el fondo */
+.splash-bienvenida,
+.splash-recordatorio,
+.splash-urgente,
+.splash-ultimo,
+.splash-expirado,
+.splash-default {
+  background: rgba(15, 23, 20, 0.78);
+}
+
+/* Contenedor del contenido */
+.splash-container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+}
+
+/* ========================================
+   CONTENIDO
+   ======================================== */
+
+.splash-content {
+  text-align: center;
+}
+
+/* Icono */
+.splash-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+/* Color del ícono según severidad */
+.splash-recordatorio .splash-icon {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.splash-urgente .splash-icon,
+.splash-ultimo .splash-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.splash-expirado .splash-icon {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Título */
+.splash-titulo {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d3436;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+/* Mensaje principal */
+.splash-mensaje {
+  font-size: 18px;
+  color: #636e72;
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+/* Submensaje */
+.splash-submensaje {
+  font-size: 14px;
+  color: #95a5a6;
+  margin: 0 0 30px 0;
+  line-height: 1.5;
+}
+
+/* ========================================
+   BOTONES
+   ======================================== */
+
+.splash-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.splash-btn {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+/* Botón de comprar */
+.splash-btn-comprar {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+}
+
+.splash-btn-comprar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.6);
+}
+
+.splash-btn-comprar:active {
+  transform: translateY(0);
+}
+
+/* Botón de continuar */
+.splash-btn-continuar {
+  background: #f8f9fa;
+  color: #495057;
+  border: 2px solid #dee2e6;
+}
+
+.splash-btn-continuar:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+/* ========================================
+   AUTO-CIERRE
+   ======================================== */
+
+.splash-auto-cierre {
+  margin-top: 24px;
+}
+
+.splash-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #e9ecef;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.splash-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #16a34a 0%, #15803d 100%);
+  animation: progressFill linear forwards;
+  transform-origin: left;
+}
+
+.splash-auto-cierre-texto {
+  font-size: 12px;
+  color: #95a5a6;
+  margin: 0;
+}
+
+/* ========================================
+   VERSIÓN
+   ======================================== */
+
+.splash-version {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+  font-size: 12px;
+  color: #adb5bd;
+  font-weight: 500;
+}
+
+/* ========================================
+   ANIMACIONES
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes progressFill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ========================================
+   VARIACIONES DE COLOR PARA BOTONES
+   ======================================== */
+
+/* En splash urgente, botón comprar en ámbar sólido */
+.splash-urgente .splash-btn-comprar {
+  background: #d97706;
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+}
+
+.splash-urgente .splash-btn-comprar:hover {
+  background: #b45309;
+  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+}
+
+/* En splash último día, botón comprar en rojo sólido */
+.splash-ultimo .splash-btn-comprar {
+  background: #dc2626;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+.splash-ultimo .splash-btn-comprar:hover {
+  background: #b91c1c;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+/* En splash expirado, botón comprar es blanco con texto oscuro */
+.splash-expirado .splash-btn-comprar {
+  background: white;
+  color: #2d3436;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+.splash-expirado .splash-btn-comprar:hover {
+  background: #f8f9fa;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.5);
+}
+
+/* Animación de pulso para botones urgentes */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .splash-container {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+
+  .splash-icon {
+    font-size: 48px;
+  }
+
+  .splash-titulo {
+    font-size: 24px;
+  }
+
+  .splash-mensaje {
+    font-size: 16px;
+  }
+
+  .splash-submensaje {
+    font-size: 13px;
+  }
+
+  .splash-btn {
+    padding: 12px 24px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .splash-container {
+    padding: 24px 16px;
+  }
+
+  .splash-icon {
+    font-size: 40px;
+  }
+
+  .splash-titulo {
+    font-size: 20px;
+  }
+
+  .splash-mensaje {
+    font-size: 15px;
+  }
+
+  .splash-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* ========================================
+   ACCESIBILIDAD
+   ======================================== */
+
+/* Focus para navegación por teclado */
+.splash-btn:focus {
+  outline: 3px solid rgba(22, 163, 74, 0.5);
+  outline-offset: 2px;
+}
+
+/* Reducir animaciones para usuarios con preferencias de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .splash-overlay,
+  .splash-container,
+  .splash-icon,
+  .splash-btn,
+  .splash-progress-fill {
+    animation: none;
+  }
+
+  .splash-btn:hover {
+    transform: none;
+  }
+}

@@ -1,0 +1,346 @@
+/* Caja/AbrirCaja.css */
+
+.abrircaja-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-abrir-caja {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.abrircaja-header {
+  padding: 25px 30px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.abrircaja-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #1a1a1a;
+}
+
+.abrircaja-btn-cerrar {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.abrircaja-btn-cerrar:hover {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+.form-abrir-caja {
+  padding: 30px;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-left: 4px solid #dc3545;
+}
+
+.info-usuario {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 25px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.info-usuario .info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-usuario .label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.info-usuario .value {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+.required {
+  color: #dc3545;
+}
+
+.turnos-grid {
+  display: grid;
+  gap: 12px;
+}
+
+/* Botones de turno */
+.btn-turno {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  text-align: left;
+}
+
+.btn-turno:hover {
+  border-color: #4A6FA5;
+  background: #f8f9ff;
+}
+
+.btn-turno.active {
+  border-color: #22c55e;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.turno-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.turno-nombre {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.turno-horario {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* Badge sugerido - ARREGLADO para que esté al final */
+.badge-sugerido {
+  background: #28a745;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  align-self: center;
+  margin-left: 10px;
+}
+
+.btn-turno.active .badge-sugerido {
+  background: #22c55e;
+  color: white;
+}
+
+/* Input de monto - ARREGLADO */
+.input-moneda {
+  position: relative;
+  display: block;
+}
+
+.simbolo-moneda {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 600;
+  color: #666;
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-moneda input {
+  width: 100%;
+  padding: 12px 15px 12px 45px !important; /* Aumentado a 45px */
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.input-moneda input:focus {
+  outline: none;
+  border-color: #4A6FA5;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Eliminar las flechas del input number */
+.input-moneda input::-webkit-outer-spin-button,
+.input-moneda input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-moneda input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.input-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #4A6FA5;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modal-acciones {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-cancelar,
+.btn-abrir {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancelar {
+  background: white;
+  color: #ff6b6b;
+  border: 2px solid #ff6b6b;
+}
+
+.btn-cancelar:hover:not(:disabled) {
+  background: #fff5f5;
+}
+
+.btn-abrir {
+  background: white;
+  color: #16a34a;
+  border: 2px solid #22c55e;
+  box-shadow: none;
+}
+
+.btn-abrir:hover:not(:disabled) {
+  background: #f0fdf4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+.btn-abrir:disabled,
+.btn-cancelar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .modal-abrir-caja {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .info-usuario {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-acciones {
+    flex-direction: column;
+  }
+}
+/* 🆕 Turno bloqueado: no corresponde a la hora actual */
+.btn-turno.bloqueado {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-turno.bloqueado:hover {
+  transform: none;
+  border-color: inherit;
+}

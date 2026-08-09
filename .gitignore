@@ -1,0 +1,79 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# VS Code
+.vscode/
+.history/
+
+# Tauri
+src-tauri/target/
+src-tauri/WixTools/
+
+# Base de datos local (cada usuario genera la suya)
+tienda.db
+tienda.db-shm
+tienda.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Instaladores generados
+*.dmg
+*.app
+*.exe
+*.msi
+*.deb
+*.AppImage
+*.rpm
+src-tauri/target/release/bundle/
+
+# Builds
+build/
+target/
+
+# Rust
+Cargo.lock
+src-tauri/Cargo.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# Backups
+*.bak
+*.backup
+*_backup/
+icons_backup/

@@ -1,0 +1,516 @@
+/* Caja/ReporteCierre.css */
+
+.reportecierre-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-reporte {
+  background: white;
+  border-radius: 16px;
+  width: 95%;
+  max-width: 800px;
+  max-height: 95vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.reporte-acciones {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.btn-cerrar-reporte,
+.btn-imprimir {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-cerrar-reporte {
+  background: white;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+}
+
+.btn-cerrar-reporte:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.btn-imprimir {
+  background: #16a34a;
+  color: white;
+  border: 2px solid #16a34a;
+}
+
+.btn-imprimir:hover {
+  background: #15803d;
+}
+
+/* Contenido del reporte */
+.reporte-contenido {
+  padding: 40px;
+  font-family: 'Courier New', monospace;
+  color: #1a1a1a;
+}
+
+.reporte-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.reporte-logo {
+  color: #16a34a;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.reporte-header h1 {
+  font-size: 24px;
+  margin: 10px 0;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.reporte-fecha {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.reporte-divider {
+  border-top: 2px dashed #ccc;
+  margin: 25px 0;
+}
+
+.reporte-seccion {
+  margin-bottom: 25px;
+}
+
+.reporte-seccion h3 {
+  font-size: 16px;
+  margin: 0 0 15px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 700;
+}
+
+/* Tablas de información */
+.info-tabla,
+.ventas-tabla,
+.movimientos-tabla {
+  width: 100%;
+}
+
+.info-fila,
+.venta-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dotted #ddd;
+}
+
+.info-fila:last-child,
+.venta-fila:last-child {
+  border-bottom: none;
+}
+
+.info-label,
+.venta-metodo {
+  color: #666;
+  font-size: 14px;
+}
+
+.info-valor,
+.venta-monto {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1a1a1a;
+}
+
+.turno-badge {
+  background: white;
+  color: #111827;
+  border: 1.5px solid #111827;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.badge-tarde {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+.badge-puntual {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+/* Ventas */
+.ventas-resumen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.venta-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dato-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.dato-valor {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.venta-fila.total {
+  margin-top: 10px;
+  padding-top: 15px;
+  border-top: 2px solid #1a1a1a;
+  font-size: 16px;
+}
+
+/* Movimientos */
+.movimiento-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #fafbfc;
+  border: 1px solid #eef0f2;
+  border-radius: 6px;
+  border-left: 3px solid #d1d5db;
+}
+
+.movimiento-fila.retiro {
+  border-left-color: #ef4444;
+}
+
+.movimiento-fila.gasto {
+  border-left-color: #f97316;
+}
+
+.movimiento-fila.ingreso {
+  border-left-color: #22c55e;
+}
+
+.movimiento-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.movimiento-tipo {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.movimiento-motivo {
+  font-size: 12px;
+  color: #666;
+}
+
+.movimiento-hora {
+  font-size: 11px;
+  color: #999;
+}
+
+.movimiento-monto {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.movimiento-monto.positivo {
+  color: #16a34a;
+}
+
+.movimiento-monto.negativo {
+  color: #dc2626;
+}
+
+.movimientos-totales {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.total-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-weight: 600;
+}
+
+.total-fila .positivo {
+  color: #16a34a;
+}
+
+.total-fila .negativo {
+  color: #dc2626;
+}
+
+/* Sección destacada */
+.reporte-seccion.destacada {
+  background: #fafbfc;
+  border: 1.5px solid #111827;
+  padding: 25px;
+  border-radius: 12px;
+}
+
+.efectivo-entregado {
+  text-align: center;
+}
+
+.entregado-label {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.entregado-monto {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Footer con firmas */
+.reporte-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.firma-seccion {
+  text-align: center;
+}
+
+.firma-linea {
+  border-top: 2px solid #1a1a1a;
+  margin-bottom: 10px;
+}
+
+.firma-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+}
+
+.reporte-pie {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  color: #999;
+  font-size: 11px;
+}
+
+.reporte-pie p {
+  margin: 5px 0;
+}
+
+.fecha-impresion {
+  font-style: italic;
+}
+
+/* Estilos de impresión */
+@media print {
+  .modal-overlay {
+    background: white !important;
+  }
+
+  .modal-reporte {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .no-imprimir,
+  .reporte-acciones {
+    display: none !important;
+  }
+
+  .reporte-contenido {
+    padding: 20mm !important;
+  }
+
+  .reporte-divider {
+    border-top: 1px dashed #000;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .reporte-contenido {
+    padding: 20px;
+  }
+
+  .ventas-resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .reporte-footer {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .entregado-monto {
+    font-size: 28px;
+  }
+}
+/* ========================
+   SECCIONES DEL REPORTE
+======================== */
+.seccion-subtitulo {
+  font-size: 12px;
+  color: #888;
+  margin: -10px 0 12px 0;
+  font-style: italic;
+}
+
+.reporte-digital .ventas-tabla {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.subtotal-digital {
+  background: #fafbfc;
+  border-top: 1.5px solid #111827 !important;
+  padding: 10px !important;
+  font-size: 15px;
+}
+
+/* Cálculo efectivo */
+.calculo-tabla {
+  width: 100%;
+}
+
+.calculo-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 14px;
+  border-bottom: 1px dotted #ddd;
+}
+
+.calculo-fila.positivo span:last-child {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.calculo-fila.negativo span:last-child {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.calculo-fila.info {
+  font-style: italic;
+  color: #9ca3af;
+}
+
+.calculo-fila.info span:last-child {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.calculo-separador {
+  border-top: 1px dashed #aaa;
+  margin: 8px 0;
+}
+
+.calculo-fila.subtotal-efectivo {
+  background: #fafbfc;
+  padding: 10px;
+  border-radius: 0;
+  margin-top: 8px;
+  border: none;
+  border-top: 1.5px solid #111827;
+  font-size: 15px;
+}
+
+/* Total general */
+.reporte-total-general {
+  background: #fafbfc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 15px !important;
+}
+
+.total-general-tabla {
+  width: 100%;
+}
+
+.total-general-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 14px;
+  border-bottom: 1px dotted #ddd;
+}
+
+.total-general-fila.gran-total {
+  background: white;
+  color: #111827;
+  padding: 14px 6px 6px;
+  border-radius: 0;
+  margin-top: 10px;
+  border: none;
+  border-top: 2.5px solid #111827;
+  font-size: 19px;
+}

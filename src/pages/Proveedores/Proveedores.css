@@ -1,0 +1,1750 @@
+/* =====================================================
+   PROVEEDORES Y COMPRAS - Estilos
+   ===================================================== */
+
+.proveedores-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #F8F9FC;
+  overflow: hidden;
+}
+
+/* HEADER */
+.proveedores-header {
+  background: #ffffff;
+  padding: 20px 28px;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.prov-header-title h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.prov-header-title p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* TABS PRINCIPALES */
+.prov-tabs {
+  display: flex;
+  background: white;
+  border-bottom: 2px solid #e5e7eb;
+  padding: 0 24px;
+}
+
+.prov-tab {
+  padding: 14px 24px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.prov-tab:hover { color: #1e3a5f; }
+.prov-tab.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
+
+.prov-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* FILTROS BAR */
+.filtros-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filtros-grupo {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filtro-select,
+.busqueda-input {
+  padding: 9px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  background: white;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 160px;
+}
+
+.busqueda-input { min-width: 280px; }
+
+.filtro-select:focus,
+.busqueda-input:focus { border-color: #2d6a9f; }
+
+.btn-nueva-compra {
+  background: linear-gradient(180deg, #0F1620 0%, #1E2A38 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.btn-nueva-compra:hover { opacity: 0.9; }
+
+/* MENSAJES */
+.mensaje { padding: 12px 16px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; font-weight: 500; }
+.mensaje.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.mensaje.error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state h3 { margin: 0 0 6px; color: #374151; font-size: 16px; }
+.empty-state p  { margin: 0; font-size: 13px; }
+
+.cargando-centro { text-align: center; padding: 40px; color: #6b7280; font-size: 14px; }
+
+/* TABLAS */
+.tabla-wrapper { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+.tabla-compras,
+.tabla-proveedores {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-compras th,
+.tabla-proveedores th {
+  background: #f1f5f9;
+  color: #374151;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.tabla-compras td,
+.tabla-proveedores td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.tabla-compras tr:hover td,
+.tabla-proveedores tr:hover td { background: #f8fafc; }
+.tabla-compras tr:last-child td,
+.tabla-proveedores tr:last-child td { border-bottom: none; }
+
+.folio-cell   { font-family: monospace; font-size: 12px; color: #4b5563; }
+.monto-cell   { font-weight: 600; white-space: nowrap; }
+.num-cell     { text-align: center; }
+.saldo-pendiente { color: #dc2626 !important; }
+.saldo-ok        { color: #16a34a !important; }
+.pago-ok         { color: #16a34a; }
+.total-compras   { color: #1e3a5f; }
+
+.nombre-proveedor { font-weight: 600; color: #1e3a5f; }
+.doc-tipo {
+  background: #E2E8F0;
+  color: #334155;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+/* BADGES ESTADO */
+.badge-estado,
+.badge-pago {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-pendiente      { background: #fef3c7; color: #92400e; }
+.badge-recibida       { background: #d1fae5; color: #065f46; }
+.badge-parcial        { background: #dbeafe; color: #1e40af; }
+.badge-cancelada      { background: #f3f4f6; color: #6b7280; }
+.badge-pago-pendiente { background: #fee2e2; color: #991b1b; }
+.badge-pago-parcial   { background: #fef3c7; color: #92400e; }
+.badge-pago-ok        { background: #d1fae5; color: #065f46; }
+
+/* BOTONES DE TABLA */
+.btn-ver-detalle {
+  background: #1e3a5f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-ver-detalle:hover { background: #2d6a9f; }
+
+.acciones-cell { display: flex; gap: 6px; }
+
+.btn-editar-prov,
+.btn-eliminar-prov {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+.btn-editar-prov  { background: #dbeafe; }
+.btn-eliminar-prov { background: #fee2e2; }
+.btn-editar-prov:hover,
+.btn-eliminar-prov:hover { opacity: 0.7; }
+
+/* =====================================================
+   MODALES
+   ===================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-prov,
+.modal-compra,
+.modal-detalle-compra {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.modal-prov           { max-width: 560px; }
+.modal-compra         { max-width: 820px; }
+.modal-detalle-compra { max-width: 780px; }
+
+.modal-prov-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-prov-header h3 { margin: 0; font-size: 17px; color: #1e3a5f; }
+.modal-subtitle { margin: 4px 0 0; font-size: 12px; color: #6b7280; }
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: #374151; }
+
+.modal-prov-body,
+.modal-compra-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.modal-prov-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancelar-modal {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-cancelar-modal:hover { background: #e5e7eb; }
+
+.btn-guardar-modal {
+  background: linear-gradient(180deg, #0F1620 0%, #1E2A38 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-guardar-modal:hover  { opacity: 0.9; }
+.btn-guardar-modal:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* FORMULARIO */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+
+.form-group label { font-size: 12px; font-weight: 600; color: #374151; }
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 9px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #374151;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: #2d6a9f; }
+
+/* COMPRA - SECCIONES */
+.compra-seccion {
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.seccion-titulo {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e3a5f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* BUSCADOR PRODUCTO */
+.agregar-producto-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.busq-producto-wrap { position: relative; flex: 1; min-width: 200px; }
+
+.busq-producto-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+.busq-producto-input:focus { border-color: #2d6a9f; }
+
+.busq-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: white;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 100;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.busq-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+.busq-item:last-child { border-bottom: none; }
+.busq-item:hover { background: #f0f4ff; }
+
+.busq-nombre { font-weight: 600; color: #1e3a5f; flex: 1; }
+.busq-codigo { font-size: 11px; color: #9ca3af; font-family: monospace; }
+.busq-tag-talla {
+  font-size: 10px;
+  background: #E2E8F0;
+  color: #334155;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.select-talla-compra {
+  padding: 9px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 100px;
+  outline: none;
+}
+.select-talla-compra:focus { border-color: #2d6a9f; }
+
+.btn-agregar-item {
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.btn-agregar-item:hover { background: #047857; }
+
+/* TABLA ITEMS COMPRA */
+.tabla-items-compra,
+.tabla-items-detalle,
+.tabla-pagos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.tabla-items-compra th,
+.tabla-items-detalle th,
+.tabla-pagos th {
+  background: #f1f5f9;
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.tabla-items-compra td,
+.tabla-items-detalle td,
+.tabla-pagos td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.input-tabla {
+  width: 80px;
+  padding: 5px 8px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+}
+.input-tabla:focus { border-color: #2d6a9f; }
+.input-recibir { width: 70px; }
+
+.talla-chip-small {
+  background: #E2E8F0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.recibido-ok      { color: #16a34a; font-weight: 700; }
+.recibido-parcial { color: #d97706; font-weight: 700; }
+
+.btn-quitar-item {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.2s;
+}
+.btn-quitar-item:hover { background: #fecaca; }
+
+/* TOTALES */
+.compra-totales {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 8px;
+  min-width: 240px;
+  margin-left: auto;
+  width: fit-content;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #374151;
+}
+
+.total-final {
+  border-top: 2px solid #1e3a5f;
+  margin-top: 6px;
+  padding-top: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+/* =====================================================
+   MODAL DETALLE COMPRA
+   ===================================================== */
+.detalle-resumen {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: #e5e7eb;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.resumen-item {
+  background: white;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resumen-item span  { font-size: 11px; color: #9ca3af; font-weight: 600; text-transform: uppercase; }
+.resumen-item strong { font-size: 15px; font-weight: 700; color: #374151; }
+
+.detalle-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 16px;
+  overflow-x: auto;
+}
+
+.detalle-tab {
+  padding: 12px 18px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.detalle-tab:hover { color: #1e3a5f; }
+.detalle-tab.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
+
+.detalle-tab-content { flex: 1; overflow-y: auto; padding: 16px; }
+
+/* TAB RECIBIR */
+.tab-recibir { display: flex; flex-direction: column; gap: 12px; }
+
+.recibir-instruccion { margin: 0 0 8px; font-size: 13px; color: #374151; }
+
+.recibir-aviso {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #92400e;
+}
+
+.btn-confirmar-recepcion {
+  background: linear-gradient(135deg, #059669, #047857);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-end;
+  transition: opacity 0.2s;
+}
+.btn-confirmar-recepcion:hover { opacity: 0.9; }
+.btn-confirmar-recepcion:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* TAB PAGAR */
+.tab-pagar { display: flex; flex-direction: column; gap: 14px; }
+
+.saldo-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.saldo-info strong { font-size: 18px; }
+
+/* TAB PAGOS */
+.sin-pagos { text-align: center; color: #9ca3af; font-size: 14px; padding: 30px; }
+
+/* FOOTER DETALLE */
+.detalle-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-cancelar-compra {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-cancelar-compra:hover { background: #fecaca; }
+.btn-cancelar-compra:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .form-grid-2,
+  .form-grid-3 { grid-template-columns: 1fr; }
+  .detalle-resumen { grid-template-columns: 1fr 1fr; }
+  .filtros-bar { flex-direction: column; align-items: stretch; }
+  .modal-compra, .modal-detalle-compra { max-width: 100%; }
+}
+
+/* =====================================================
+   BOTÓN NUEVO PRODUCTO EN COMPRA
+   ===================================================== */
+.btn-nuevo-prod-compra {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.btn-nuevo-prod-compra:hover { opacity: 0.9; }
+
+/* MODAL NUEVO PRODUCTO (z-index mayor para apilarse sobre modal compra) */
+.modal-overlay-top {
+  z-index: 1100;
+}
+
+.modal-nuevo-prod {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+/* SECCIÓN TALLAS DENTRO DE NUEVO PRODUCTO */
+.seccion-tallas-compra {
+  margin-top: 14px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 14px;
+  background: #f5f3ff;
+}
+
+.tallas-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tallas-label-compra {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4c1d95;
+}
+
+.toggle-group {
+  display: flex;
+  gap: 4px;
+  background: #E2E8F0;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.toggle-btn-compra {
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.toggle-btn-compra.activo {
+  background: white;
+  color: #4c1d95;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+/* GRID DE TALLAS */
+.tallas-grid-compra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.talla-chip-compra {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.talla-chip-btn {
+  width: 44px;
+  height: 36px;
+  border: 2px solid #c4b5fd;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.talla-chip-compra.activa .talla-chip-btn {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: white;
+}
+
+.tallas-inputs-mini input {
+  width: 44px;
+  padding: 4px 4px;
+  border: 1.5px solid #c4b5fd;
+  border-radius: 6px;
+  font-size: 11px;
+  text-align: center;
+  outline: none;
+}
+.tallas-inputs-mini input:focus { border-color: #7c3aed; }
+
+.tallas-resumen-compra {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #E2E8F0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #4c1d95;
+  font-weight: 600;
+}
+
+/* =====================================================
+   PANEL MULTI-TALLA EN NUEVA COMPRA
+   ===================================================== */
+.panel-multi-talla {
+  margin-top: 12px;
+  border: 2px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 14px;
+  background: #eff6ff;
+}
+
+.panel-multi-talla-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #1e40af;
+}
+
+.panel-multi-hint {
+  font-size: 11px;
+  color: #93c5fd;
+  font-style: italic;
+}
+
+.multi-talla-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Chip individual de talla */
+.multi-talla-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 2px solid #bfdbfe;
+  border-radius: 10px;
+  background: white;
+  padding: 8px 10px;
+  cursor: pointer;
+  min-width: 56px;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.multi-talla-chip:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.multi-talla-chip.activa {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+  color: white;
+}
+
+.multi-talla-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.multi-talla-stock-actual {
+  font-size: 10px;
+  color: #93c5fd;
+  white-space: nowrap;
+}
+
+.multi-talla-chip.activa .multi-talla-stock-actual {
+  color: #bfdbfe;
+}
+
+/* Input de cantidad dentro del chip */
+.multi-talla-cant {
+  width: 48px;
+  padding: 3px 4px;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  outline: none;
+}
+
+.multi-talla-cant:focus {
+  background: white;
+  color: #1d4ed8;
+  border-color: white;
+}
+
+/* Resumen de tallas seleccionadas */
+.multi-talla-resumen {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #dbeafe;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #1e40af;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.multi-talla-tag {
+  background: #1d4ed8;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* =====================================================
+   v1.5 — RECEPCIÓN CON CONFORME/DAÑADO
+   ===================================================== */
+
+.tabla-recibir-v2 .col-recibida { background: #f0f9ff; }
+.tabla-recibir-v2 .col-conforme { background: #f0fdf4; }
+.tabla-recibir-v2 .col-danado   { background: #fff7ed; }
+
+.input-conforme {
+  border-color: #22c55e !important;
+  width: 70px;
+}
+.input-conforme:focus { box-shadow: 0 0 0 2px #bbf7d0; }
+
+.fila-con-danado { background: #fff7ed !important; }
+
+.danado-cell { color: #f97316; font-weight: 700; }
+.danado-ok   { color: #9ca3af; font-size: 12px; }
+
+.badge-danado {
+  background: #fed7aa;
+  color: #c2410c;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.aviso-danados {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #c2410c;
+}
+
+/* =====================================================
+   v1.5 — TAB DEVOLUCIONES A PROVEEDOR
+   ===================================================== */
+
+.tab-devoluciones {
+  padding: 4px 0;
+}
+
+.devolucion-lista {
+  margin-bottom: 24px;
+}
+
+.devolucion-lista-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.devolucion-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: white;
+}
+.devolucion-card.estado-pendiente  { border-left: 4px solid #f59e0b; }
+.devolucion-card.estado-aceptada   { border-left: 4px solid #22c55e; }
+.devolucion-card.estado-rechazada  { border-left: 4px solid #ef4444; }
+
+.devolucion-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.devolucion-folio {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1e3a5f;
+}
+
+.devolucion-monto {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 14px;
+  color: #374151;
+}
+
+.badge-estado-dev {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge-pendiente  { background: #fef3c7; color: #92400e; }
+.badge-aceptada   { background: #dcfce7; color: #166534; }
+.badge-rechazada  { background: #fee2e2; color: #991b1b; }
+
+.devolucion-card-body {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+.devolucion-motivo    { font-weight: 600; color: #374151; }
+.devolucion-detalle   { color: #6b7280; }
+.devolucion-resolucion { color: #2563eb; font-weight: 600; }
+
+.devolucion-items-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.devolucion-item-chip {
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #374151;
+}
+
+.devolucion-resolver {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-resolver-abrir {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-resolver-abrir:hover { background: #f9fafb; border-color: #9ca3af; }
+
+.resolver-opciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.resolver-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.btn-resolver {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+.btn-resolver.credito   { background: #dbeafe; color: #1d4ed8; }
+.btn-resolver.reembolso { background: #dcfce7; color: #166534; }
+.btn-resolver.cambio    { background: #E2E8F0; color: #334155; }
+.btn-resolver.rechazar  { background: #fee2e2; color: #991b1b; }
+.btn-resolver.cancelar  { background: #f3f4f6; color: #6b7280; }
+.btn-resolver:hover     { opacity: 0.85; transform: translateY(-1px); }
+.btn-resolver:disabled  { opacity: 0.5; cursor: not-allowed; }
+
+.devolucion-credito-ok {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* Formulario nueva devolución */
+.devolucion-nueva {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.devolucion-nueva-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 12px;
+}
+
+.devolucion-instruccion {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 10px 0 6px;
+}
+
+.fila-seleccionada-devol {
+  background: #fefce8 !important;
+}
+
+.input-devolver {
+  width: 70px;
+  border-color: #f59e0b !important;
+}
+.input-devolver:focus { box-shadow: 0 0 0 2px #fde68a; }
+
+.devolucion-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 600;
+  border-top: 1px dashed #e5e7eb;
+  margin-top: 8px;
+}
+
+.btn-registrar-devol {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+.btn-registrar-devol:hover {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+}
+
+/* =====================================================
+   v1.5 — CRÉDITO EN NUEVA COMPRA
+   ===================================================== */
+
+.credito-row {
+  background: #eff6ff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.credito-badge {
+  background: #2563eb;
+  color: white;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.input-credito-aplicar {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: right;
+  background: white;
+}
+.input-credito-aplicar:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+.credito-aplicado-row { color: #2563eb; }
+.credito-ok { color: #16a34a; font-weight: 700; }
+
+/* Badge pendiente en tab devoluciones */
+.badge-pendiente {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f59e0b;
+  color: white;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+/* =====================================================
+   v1.5 — RECEPCIÓN CON CONFORME/DAÑADO
+   ===================================================== */
+
+.recibir-leyenda {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.leyenda-item {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.leyenda-recibida  { background: #E2E8F0; color: #334155; }
+.leyenda-conforme  { background: #d1fae5; color: #065f46; }
+.leyenda-danado    { background: #fef3c7; color: #92400e; }
+
+.tabla-recepcion th.col-recibida { background: #E2E8F0; }
+.tabla-recepcion th.col-conforme { background: #d1fae5; }
+.tabla-recepcion th.col-danado   { background: #fef3c7; }
+
+.input-conforme { border-color: #6ee7b7 !important; }
+.input-conforme-warn { border-color: #f59e0b !important; background: #fffbeb; }
+
+.fila-tiene-danado { background: #fffbeb; }
+.danado-cell  { color: #d97706; font-weight: 700; }
+.danado-cero  { color: #9ca3af; }
+
+.recibir-aviso-warn {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* =====================================================
+   v1.5 — TAB DEVOLUCIONES AL PROVEEDOR
+   ===================================================== */
+
+.tab-devoluciones {
+  color: #dc2626;
+}
+.tab-devoluciones.active {
+  color: #dc2626;
+  border-bottom-color: #dc2626;
+}
+
+.tab-devoluciones-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.devol-seccion-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Cards de devoluciones existentes */
+.devoluciones-lista { display: flex; flex-direction: column; gap: 10px; }
+
+.devol-card {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: white;
+}
+.devol-card.devol-estado-pendiente  { border-color: #fbbf24; background: #fffbeb; }
+.devol-card.devol-estado-aceptada   { border-color: #6ee7b7; background: #f0fdf4; }
+.devol-card.devol-estado-rechazada  { border-color: #fca5a5; background: #fef2f2; }
+
+.devol-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.devol-folio   { font-weight: 700; font-size: 13px; margin-right: 8px; }
+.devol-fecha   { font-size: 12px; color: #6b7280; margin-right: 8px; }
+.devol-monto   { font-weight: 700; font-size: 15px; color: #1e3a5f; }
+
+.badge-devol-estado {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+.badge-devol-pendiente  { background: #fef3c7; color: #92400e; }
+.badge-devol-aceptada   { background: #d1fae5; color: #065f46; }
+.badge-devol-rechazada  { background: #fee2e2; color: #991b1b; }
+.badge-devol-tipo       { background: #E2E8F0; color: #334155; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+
+.devol-card-body { display: flex; gap: 10px; align-items: center; font-size: 12px; margin-bottom: 6px; }
+.devol-motivo   { font-weight: 600; color: #374151; }
+.devol-detalle  { color: #6b7280; }
+
+.devol-items { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.devol-item-tag {
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.devol-acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+.devol-acciones-label { font-size: 12px; color: #6b7280; font-weight: 600; }
+
+.btn-devol-aceptar {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #059669;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-devol-aceptar:hover     { background: #047857; }
+.btn-devol-reembolso         { background: #2563eb; }
+.btn-devol-reembolso:hover   { background: #1d4ed8; }
+.btn-devol-cambio            { background: #7c3aed; }
+.btn-devol-cambio:hover      { background: #334155; }
+
+.btn-devol-rechazar {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #dc2626;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-devol-rechazar:hover { background: #b91c1c; }
+
+/* Formulario nueva devolución */
+.devol-form {
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.devol-items-titulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 12px 0 8px;
+}
+
+.col-devolver { background: #fee2e2; }
+.fila-a-devolver { background: #fff5f5; }
+
+.input-devolver {
+  border-color: #fca5a5 !important;
+  background: #fff5f5;
+}
+
+.devol-resumen-monto {
+  margin: 12px 0 8px;
+  padding: 10px 14px;
+  background: #fef3c7;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #92400e;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.devol-nota-credito {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.btn-registrar-devol {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  margin-top: 12px;
+}
+.btn-registrar-devol:hover { background: linear-gradient(135deg, #b91c1c, #991b1b) !important; }
+
+/* =====================================================
+   v1.5 — CRÉDITO DISPONIBLE EN NUEVA COMPRA
+   ===================================================== */
+
+.credito-disponible-aviso {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #065f46;
+}
+
+.total-credito {
+  color: #059669;
+  font-weight: 600;
+}
+
+.input-credito {
+  border-color: #6ee7b7 !important;
+  background: #f0fdf4;
+}
+
+.label-max {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* =====================================================
+   FILTROS AVANZADOS - FECHAS Y ACCIONES
+   ===================================================== */
+
+.filtros-bar-wrap {
+  padding: 12px 20px 0;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filtros-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+}
+
+.filtros-grupo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filtro-fecha-grupo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.filtro-fecha-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.filtro-fecha {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #1f2937;
+  outline: none;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.btn-limpiar-filtros {
+  padding: 6px 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-limpiar-filtros:hover { background: #fecaca; }
+
+.filtros-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-vista-toggle {
+  padding: 7px 14px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-vista-toggle:hover { background: #e5e7eb; }
+.btn-vista-toggle.activo {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.btn-exportar-excel {
+  padding: 7px 14px;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-exportar-excel:hover { background: #a7f3d0; }
+
+/* BARRA RESUMEN RÁPIDO */
+.resumen-filtro-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  font-size: 13px;
+  color: #374151;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+
+.resumen-filtro-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.resumen-filtro-label {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.resumen-filtro-sep {
+  color: #d1d5db;
+  font-size: 16px;
+}
+
+/* FILA TOTALES EN TFOOT */
+.fila-totales-tabla {
+  background: #f0f9ff;
+  font-size: 13px;
+}
+.fila-totales-tabla td {
+  padding: 10px 12px;
+  border-top: 2px solid #bae6fd;
+}
+
+/* =====================================================
+   VISTA AGRUPADA POR PROVEEDOR
+   ===================================================== */
+
+.vista-agrupada {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.grupo-proveedor-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.grupo-proveedor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, #0F1620 0%, #1E2A38 100%);
+  color: white;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.grupo-proveedor-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.grupo-proveedor-nombre {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.grupo-proveedor-meta {
+  font-size: 12px;
+  opacity: 0.75;
+  background: rgba(255,255,255,0.15);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.grupo-proveedor-totales {
+  display: flex;
+  gap: 20px;
+}
+
+.grupo-total-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
+}
+
+.grupo-total-item span {
+  opacity: 0.75;
+  font-size: 11px;
+}
+
+.grupo-total-item strong {
+  font-size: 15px;
+}
+
+.tabla-compras-grupo {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.tabla-compras-grupo thead tr {
+  background: #f8fafc;
+}
+
+/* TOTALES GENERALES AL FINAL */
+.grupo-totales-generales {
+  background: #1e3a5f;
+  color: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.grupo-totales-generales span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grupo-totales-generales strong {
+  font-size: 16px;
+}
+/* 🆕 Agregar talla nueva a un producto ya existente */
+.btn-agregar-talla-nueva {
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: #f0fdf4;
+  border: 1.5px dashed #16a34a;
+  border-radius: 8px;
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-agregar-talla-nueva:hover { background: #dcfce7; }
+
+.form-talla-nueva {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  background: #f9fafb;
+  border-radius: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-talla-nueva-input {
+  padding: 8px 10px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  width: 120px;
+}
+
+.btn-confirmar-talla-nueva {
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-confirmar-talla-nueva:hover:not(:disabled) { background: #15803d; }
+
+.btn-cancelar-talla-nueva {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}

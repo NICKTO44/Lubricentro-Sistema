@@ -1,0 +1,291 @@
+/* Recibo.css - Estilos para ticket de venta */
+
+.recibo-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.recibo-container {
+  background: white;
+  border-radius: 12px;
+  max-width: 450px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.recibo-acciones {
+  padding: 15px 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  border-bottom: 2px solid #f0f0f0;
+  background: #f9f9f9;
+  border-radius: 12px 12px 0 0;
+}
+
+.btn-imprimir,
+.btn-descargar,
+.btn-cerrar {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-imprimir {
+  background: #10b981;
+  color: white;
+}
+
+.btn-imprimir:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.btn-descargar {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-descargar:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+.btn-cerrar {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-cerrar:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+/* Ticket */
+.recibo-ticket {
+  padding: 30px 25px;
+  font-family: 'Courier New', monospace;
+  background: white;
+  color: #000;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.recibo-header {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.recibo-header h1 {
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  font-weight: bold;
+}
+
+.recibo-header p {
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.recibo-header .direccion {
+  font-size: 11px;
+  color: #444;
+  margin-top: 6px;
+}
+
+.recibo-separador {
+  text-align: center;
+  margin: 10px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.recibo-info {
+  margin: 15px 0;
+  font-size: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+/* Productos */
+.recibo-productos {
+  margin: 15px 0;
+}
+
+.recibo-productos table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.recibo-productos th {
+  text-align: left;
+  padding: 5px 3px;
+  font-weight: bold;
+  border-bottom: 1px solid #333;
+}
+
+.recibo-productos td {
+  padding: 5px 3px;
+  vertical-align: top;
+}
+
+.recibo-productos .desc {
+  word-break: break-word;
+  max-width: 150px;
+}
+
+/* Totales */
+.recibo-totales {
+  margin: 15px 0;
+  font-size: 12px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.total-final {
+  font-size: 14px;
+  padding-top: 5px;
+  border-top: 1px solid #333;
+  margin-top: 8px;
+}
+
+/* Pago */
+.recibo-pago {
+  margin: 15px 0;
+  font-size: 12px;
+}
+
+.pago-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+/* Footer */
+.recibo-footer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 12px;
+}
+
+.recibo-footer p {
+  margin: 5px 0;
+}
+
+.recibo-footer .small {
+  font-size: 10px;
+  color: #666;
+}
+
+/* Estilos de impresión */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .recibo-overlay,
+  .recibo-overlay * {
+    visibility: visible;
+  }
+  
+  .recibo-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .recibo-container {
+    max-width: 100%;
+    max-height: 100%;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+  
+  .recibo-acciones,
+  .no-print {
+    display: none !important;
+  }
+  
+  .recibo-ticket {
+    padding: 10mm;
+    max-width: 80mm;
+    margin: 0;
+  }
+  
+  .recibo-header h1 {
+    font-size: 16px;
+  }
+  
+  .recibo-productos table {
+    page-break-inside: avoid;
+  }
+  
+  /* Evitar saltos de página no deseados */
+  .recibo-info,
+  .recibo-totales,
+  .recibo-pago {
+    page-break-inside: avoid;
+  }
+}
+
+/* Scrollbar personalizado */
+.recibo-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.recibo-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.recibo-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.recibo-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+/* 🆕 Comprobante electrónico real (Boleta/Factura vía NubeFacT) */
+.btn-pdf-sunat {
+  background: #7c3aed !important;
+}
+.btn-pdf-sunat:hover {
+  background: #334155 !important;
+}
+
+.recibo-tipo-comprobante {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}

@@ -1,0 +1,199 @@
+/* BannerLicencia.css - Estilos para banner de estado (CORREGIDO - SIN TEXTO CORTADO) */
+
+.banner-licencia {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 15px;  /* 🔧 Reducido de 12px 20px a 10px 15px */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease-out;
+  min-height: 50px;  /* 🔧 Altura mínima para asegurar espacio */
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Estados del banner */
+.banner-info {
+  background: #16a34a;
+  color: white;
+}
+
+.banner-warning {
+  background: #d97706;
+  color: white;
+}
+
+.banner-error {
+  background: #dc2626;
+  color: white;
+}
+
+/* Contenido */
+.banner-contenido {
+  display: flex;
+  align-items: center;
+  gap: 10px;  /* 🔧 Reducido de 12px a 10px */
+  flex: 1;
+  min-width: 0;  /* 🔧 Permite que el flex-child se encoja */
+  margin-right: 10px;  /* 🔧 Espacio para los botones */
+}
+
+.banner-icono {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.banner-mensaje {
+  font-size: 13px;  /* 🔧 Reducido de 14px a 13px */
+  font-weight: 600;
+  letter-spacing: 0.2px;  /* 🔧 Reducido de 0.3px a 0.2px */
+  line-height: 1.4;  /* 🔧 Mejor altura de línea */
+  flex: 1;
+  min-width: 0;  /* 🔧 Permite que el texto se ajuste */
+  overflow: hidden;  /* 🔧 Oculta overflow */
+  text-overflow: ellipsis;  /* 🔧 Muestra ... si es muy largo */
+  white-space: nowrap;  /* 🔧 Una sola línea en desktop */
+}
+
+/* Acciones */
+.banner-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;  /* 🔧 Reducido de 10px a 8px */
+  flex-shrink: 0;  /* 🔧 Los botones no se encogen */
+}
+
+.banner-btn-activar,
+.banner-btn-cerrar {
+  padding: 6px 12px;  /* 🔧 Reducido de 8px 16px a 6px 12px */
+  font-size: 12px;  /* 🔧 Reducido de 13px a 12px */
+  font-weight: 600;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;  /* 🔧 Texto del botón en una línea */
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.banner-btn-activar {
+  background: rgba(255, 255, 255, 0.95);
+  color: #16a34a;
+}
+
+.banner-warning .banner-btn-activar {
+  color: #c05621;
+}
+
+.banner-error .banner-btn-activar {
+  color: #c53030;
+}
+
+.banner-btn-activar:hover {
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.banner-btn-activar:active {
+  transform: translateY(0);
+}
+
+.banner-btn-cerrar {
+  background: rgba(0, 0, 0, 0.1);
+  color: white;
+  width: 28px;  /* 🔧 Reducido de 32px a 28px */
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;  /* 🔧 Reducido de 18px a 16px */
+}
+
+.banner-btn-cerrar:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  /* 🔧 Para pantallas medianas */
+  .banner-mensaje {
+    font-size: 12px;
+  }
+  
+  .banner-btn-activar {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .banner-licencia {
+    padding: 8px 12px;
+    flex-direction: column;
+    gap: 8px;
+    min-height: auto;  /* 🔧 Sin altura mínima en móvil */
+  }
+
+  .banner-contenido {
+    width: 100%;
+    justify-content: center;
+    margin-right: 0;
+  }
+  
+  .banner-mensaje {
+    white-space: normal;  /* 🔧 Permite múltiples líneas en móvil */
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .banner-acciones {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .banner-btn-activar {
+    flex: 1;  /* 🔧 Botón ocupa más espacio en móvil */
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 🔧 Para pantallas muy pequeñas */
+  .banner-icono {
+    font-size: 18px;
+  }
+  
+  .banner-mensaje {
+    font-size: 11px;
+  }
+  
+  .banner-btn-activar {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+  
+  .banner-btn-cerrar {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+}

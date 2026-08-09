@@ -1,0 +1,569 @@
+/* Devoluciones empresarial minimalista */
+:root {
+  --primary: #2c3e50;
+  --primary-dark: #1a252f;
+  --secondary: #34495e;
+  --accent: #4A6FA5;
+  --accent-hover: #3B5A87;
+  --background: #ecf0f1;
+  --card-bg: #ffffff;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --border: #dfe4e8;
+  --success: #27ae60;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+}
+
+.devoluciones-container {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+}
+
+.devoluciones-header {
+    background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 30px;
+  height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.devoluciones-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-volver {
+  padding: 10px 20px;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-volver:hover {
+  background: #2d2d4e;
+  transform: translateY(-1px);
+}
+
+.devoluciones-usuario {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+.devoluciones-content {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Buscar venta */
+.buscar-venta-card {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.buscar-venta-card h3 {
+  margin: 0 0 20px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buscar-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.buscar-input-group input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  text-transform: uppercase;
+  background: #f8f9fa;
+  transition: all 0.3s;
+}
+
+.buscar-input-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.btn-buscar {
+  padding: 12px 28px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-buscar:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.btn-buscar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Venta encontrada */
+.venta-encontrada {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.venta-info-card {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+}
+
+.venta-info-card h3 {
+  margin: 0 0 20px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.venta-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item .label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item .value {
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Productos */
+.productos-devolucion-card {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+}
+
+.productos-devolucion-card h3 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.instruccion {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.productos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.producto-devolucion-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: #f8f9fa;
+  transition: all 0.3s;
+}
+
+.producto-devolucion-item:has(input[type="checkbox"]:checked) {
+  border-color: var(--accent);
+  background: #e3f2fd;
+}
+
+.producto-checkbox input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.producto-info {
+  flex: 1;
+}
+
+.producto-nombre {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+.producto-detalles {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.cantidad-devolver {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cantidad-devolver label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.cantidad-devolver input {
+  width: 70px;
+  padding: 8px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  background: white;
+}
+
+.cantidad-devolver input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.producto-subtotal {
+  min-width: 110px;
+  text-align: right;
+}
+
+.subtotal-devolucion {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--warning);
+}
+
+/* Footer */
+.devolucion-footer {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.motivo-card label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.motivo-card select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f8f9fa;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.motivo-card select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.total-devolucion-card {
+  background: linear-gradient(135deg, var(--warning) 0%, #e67e22 100%);
+  padding: 25px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.total-label {
+  font-size: 16px;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.total-monto {
+  font-size: 36px;
+  color: white;
+  font-weight: 700;
+}
+
+.acciones-devolucion {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancelar {
+  padding: 14px 28px;
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+.btn-cancelar:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+
+.btn-procesar-devolucion {
+  padding: 14px 28px;
+  background: var(--success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+.btn-procesar-devolucion:hover:not(:disabled) {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+}
+
+.btn-procesar-devolucion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mensajes */
+.mensaje {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  white-space: pre-line;
+  font-size: 14px;
+}
+
+.mensaje.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 2px solid var(--success);
+}
+
+.mensaje.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 2px solid var(--danger);
+}
+
+/* Modal de confirmación */
+.modal-confirmacion-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(44, 62, 80, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-confirmacion {
+  background: white;
+  padding: 35px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 450px;
+  width: 90%;
+  border: 1px solid var(--border);
+}
+
+.modal-confirmacion h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.modal-confirmacion p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.confirmacion-detalles {
+  background: #fff3cd;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  text-align: center;
+  border: 2px solid var(--warning);
+}
+
+.confirmacion-detalles strong {
+  color: var(--warning);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.confirmacion-acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancelar-modal {
+  padding: 12px 24px;
+  background: #e5e7eb;
+  color: var(--text-primary);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+}
+
+.btn-cancelar-modal:hover {
+  background: #d1d5db;
+}
+
+.btn-confirmar-modal {
+  padding: 12px 24px;
+  background: var(--success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+.btn-confirmar-modal:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .devoluciones-content {
+    padding: 20px;
+  }
+
+  .venta-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .producto-devolucion-item {
+    flex-wrap: wrap;
+  }
+
+  .acciones-devolucion {
+    flex-direction: column;
+  }
+
+  .acciones-devolucion button {
+    width: 100%;
+  }
+}
+/* 🆕 Producto vendido por peso: no se puede devolver desde esta pantalla */
+.producto-devolucion-item.no-devolvible {
+  opacity: 0.55;
+  background: #fafbfc;
+}
+
+.producto-nota-no-devolvible {
+  font-size: 12px;
+  color: #d97706;
+  margin-top: 4px;
+  font-weight: 600;
+}
