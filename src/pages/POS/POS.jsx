@@ -145,7 +145,7 @@ const formatearNumero = (n) => {
 
 const getStockTexto = (stock, unidadMedida) => {
   if (stock === 0) return 'Agotado';
-  const unidades = { KG: 'kg', GRAMO: 'g', LITRO: 'L', ML: 'mL' };
+    const unidades = { KG: 'kg', GRAMO: 'g', LITRO: 'L', ML: 'mL', GALON: 'gal', METRO: 'm' };
   if (!unidadMedida || unidadMedida === 'UNIDAD') {
     return `Stock: ${Math.round(stock)}`;
   }
@@ -696,7 +696,7 @@ const getStockTexto = (stock, unidadMedida) => {
                   onClick={() => !modoSoloLectura && setMetodoPago(m)}
                   disabled={modoSoloLectura}
                 >
-                  {m === 'EFECTIVO' ? 'Efectivo' : m === 'TARJETA' ? 'Tarjeta' : 'Transferencia'}
+                 {m === 'EFECTIVO' ? ' Efectivo' : m === 'TARJETA' ? ' Yape' : ' Transferencia'}
                 </button>
               ))}
             </div>

@@ -6,17 +6,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
 
 :root {
-  --bg:          #f0efe9;
+  --bg:          #E7EFEA;
   --surface:     #ffffff;
-  --border:      #e2dfd8;
-  --accent:      #1a1a2e;
-  --accent-soft: #2d2d4e;
+  --border:      #E3E7EC;
+  --accent:      #5B8C7B;
+  --accent-soft: #4A7264;
+  --accent-tint: #E7EFEC;
   --danger:      #dc2626;
-  --success:     #16a34a;
+  --success:     #3D8F6D;
   --warning:     #d97706;
-  --muted:       #6b7280;
-  --text:        #111827;
-  --text-light:  #374151;
+  --muted:       #8A8F98;
+  --text:        #1C2126;
+  --text-light:  #4B5158;
 
   /* stock — color de tarjeta completa */
   --card-low-bg:      #fff5f5;
@@ -53,18 +54,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
-  background: #ffffff;
+  padding: 20px 24px 12px;
+  background: var(--bg);
   color: var(--text);
   flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
 }
 
 .pos-header h2 {
   font-family: 'Sora', sans-serif;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: -0.01em;
   color: var(--text);
 }
 
@@ -107,7 +108,7 @@ body {
    ===================================================== */
 .pos-content {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: 1fr 380px;
   gap: 0;
   flex: 1;
   overflow: hidden;
@@ -118,8 +119,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 16px;
-  gap: 12px;
+  padding: 8px 24px 24px;
+  gap: 16px;
 }
 
 /* ===== DERECHA ===== */
@@ -127,7 +128,10 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border-left: 1.5px solid var(--border);
+  border-left: none;
+  border-radius: 24px;
+  margin: 8px 24px 24px 0;
+  box-shadow: 0 1px 3px rgba(28,33,38,0.06);
   overflow: hidden;
 }
 
@@ -135,55 +139,50 @@ body {
    BÚSQUEDA
    ===================================================== */
 .busqueda-rapida {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   flex-shrink: 0;
 }
 
 .busqueda-rapida h3 {
-  font-family: 'Sora', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 10px;
+  display: none;
 }
 
 .input-group {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .input-group input {
   flex: 1;
-  padding: 10px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 9px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 999px;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   outline: none;
-  transition: border-color .2s, box-shadow .2s;
+  box-shadow: 0 1px 2px rgba(28,33,38,0.05);
+  transition: box-shadow .2s;
 }
 .input-group input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(26,26,46,0.08);
+  box-shadow: 0 0 0 3px var(--accent-tint);
 }
 
 .select-categoria {
-  padding: 10px 12px;
-  border: 1.5px solid var(--border);
-  border-radius: 9px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 999px;
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   outline: none;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(28,33,38,0.05);
 }
 
 .input-group button {
@@ -191,7 +190,7 @@ body {
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 9px;
+  border-radius: 999px;
   font-family: 'Sora', sans-serif;
   font-size: 12px;
   font-weight: 700;
@@ -229,19 +228,19 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0 0;
 }
 
 .lista-productos h3 {
   font-family: 'Sora', sans-serif;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
   margin-bottom: 12px;
   flex-shrink: 0;
 }
@@ -251,10 +250,11 @@ body {
    ===================================================== */
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
   overflow-y: auto;
   padding-right: 4px;
+  padding-bottom: 8px;
   align-content: start;
 }
 
@@ -266,22 +266,22 @@ body {
 /* ===== TARJETA DE PRODUCTO ===== */
 .producto-card {
   background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 11px;
-  padding: 10px 10px 9px;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 12px 14px;
   cursor: pointer;
-  transition: transform .16s, box-shadow .16s, border-color .16s;
+  transition: transform .16s, box-shadow .16s;
   user-select: none;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(28,33,38,0.06);
 }
 
 .producto-card:hover:not(.disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(26,26,46,0.10);
-  border-color: var(--accent);
+  box-shadow: 0 8px 20px rgba(28,33,38,0.10);
 }
 
 .producto-card:active:not(.disabled) {
@@ -324,13 +324,13 @@ body {
 .producto-imagen-box {
   width: 100%;
   aspect-ratio: 1 / 1; /* cuadrado real: sin max-height que lo aplaste */
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--bg, #F3F4F6);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .producto-imagen {
@@ -364,7 +364,7 @@ body {
   font-family: 'Sora', sans-serif;
   font-size: 15.5px;
   font-weight: 700;
-  color: var(--danger);
+  color: var(--text);
   margin-top: 1px;
 }
 
@@ -440,17 +440,17 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 14px 14px 0;
+  padding: 24px 22px 0;
 }
 
 .carrito h3 {
   font-family: 'Sora', sans-serif;
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 10px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  text-transform: none;
+  margin-bottom: 16px;
   flex-shrink: 0;
 }
 
@@ -474,20 +474,25 @@ body {
   padding-right: 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 18px;
 }
 .carrito-items::-webkit-scrollbar { width: 4px; }
 .carrito-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
 /* ── Item del carrito ── */
 .carrito-item {
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 9px;
-  padding: 10px 10px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+.carrito-items > .carrito-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .item-info {
@@ -499,7 +504,7 @@ body {
 
 .item-nombre {
   font-family: 'Sora', sans-serif;
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.3;
@@ -537,43 +542,51 @@ body {
 .cantidad-control {
   display: flex;
   align-items: center;
-  gap: 0;
-  border: 1.5px solid var(--border);
-  border-radius: 7px;
-  overflow: hidden;
-  background: white;
+  gap: 10px;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
 }
 
 .btn-cantidad {
-  width: 28px;
-  height: 28px;
-  background: white;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  background: var(--bg);
   border: none;
-  font-size: 16px;
+  border-radius: 50%;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  color: var(--text);
+  color: var(--text-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background .12s;
+  transition: background .12s, transform .1s;
   line-height: 1;
 }
-.btn-cantidad:hover:not(:disabled) { background: var(--bg); }
+.btn-cantidad:hover:not(:disabled) { background: var(--border); }
+.btn-cantidad:active:not(:disabled) { transform: scale(0.92); }
 .btn-cantidad:disabled { opacity: 0.35; cursor: not-allowed; }
 
+/* El segundo botón (+) — el primero es "−" */
+.btn-cantidad:last-of-type {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-cantidad:last-of-type:hover:not(:disabled) { background: var(--accent-soft); }
+
 .input-cantidad {
-  width: 38px;
-  height: 28px;
+  width: 20px;
+  height: 26px;
   border: none;
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
   text-align: center;
   font-family: 'Sora', sans-serif;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text);
-  background: white;
+  background: transparent;
   outline: none;
   -moz-appearance: textfield;
 }
@@ -645,82 +658,80 @@ body {
    TOTALES
    ===================================================== */
 .totales {
-  padding: 10px 14px;
-  border-top: 1.5px solid var(--border);
-  border-bottom: 1.5px solid var(--border);
+  padding: 18px 22px;
+  border-top: none;
+  border-bottom: none;
   background: var(--surface);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .total-row {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  color: var(--text-light);
+  color: var(--muted);
 }
-.total-row span:last-child { font-weight: 600; }
+.total-row span:last-child { font-weight: 500; color: var(--text-light); }
 .total-row.descuento { color: var(--success); }
-.total-row.descuento span:last-child { font-weight: 700; }
+.total-row.descuento span:last-child { font-weight: 600; color: var(--success); }
 
 .total-final {
   font-family: 'Sora', sans-serif;
-  font-size: 17px !important;
+  font-size: 19px !important;
   font-weight: 700;
   color: var(--text) !important;
-  margin-top: 4px;
-  padding-top: 6px;
-  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1.5px dashed var(--border);
 }
-.total-final span:last-child { color: var(--danger) !important; }
+.total-final span:last-child { color: var(--text) !important; }
 
 /* =====================================================
    MÉTODO DE PAGO
    ===================================================== */
 .metodo-pago {
-  padding: 10px 14px 0;
+  padding: 16px 22px 0;
   flex-shrink: 0;
 }
 
 .metodo-pago h4 {
   font-family: 'Sora', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  margin-bottom: 10px;
 }
 
 .metodos {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
 .metodos button {
-  padding: 8px 4px;
+  padding: 12px 4px;
   background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 9px;
+  border: 1.5px solid transparent;
+  border-radius: 16px;
   font-family: 'Sora', sans-serif;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  color: var(--text-light);
+  color: var(--muted);
   transition: all .15s;
   white-space: nowrap;
 }
 .metodos button:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: white;
+  color: var(--text);
 }
 .metodos button.active {
-  background: var(--accent);
-  color: white;
+  background: var(--accent-tint);
+  color: var(--accent-soft);
   border-color: var(--accent);
 }
 .metodos button:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -801,16 +812,16 @@ body {
 .acciones {
   display: grid;
   grid-template-columns: 1fr 2fr;
-  gap: 8px;
-  padding: 10px 14px 14px;
+  gap: 10px;
+  padding: 16px 22px 22px;
   flex-shrink: 0;
 }
 
 .btn-limpiar {
-  padding: 12px 8px;
-  background: white;
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
+  padding: 14px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
   font-family: 'Sora', sans-serif;
   font-size: 12px;
   font-weight: 600;
@@ -819,26 +830,25 @@ body {
   transition: all .15s;
 }
 .btn-limpiar:hover:not(:disabled) {
-  background: #fee2e2;
+  background: var(--bg);
   color: var(--danger);
-  border-color: #fecaca;
 }
 .btn-limpiar:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .btn-procesar {
-  padding: 12px 8px;
-  background: var(--success);
+  padding: 14px 8px;
+  background: var(--accent);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
   font-family: 'Sora', sans-serif;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
   transition: background .15s, transform .1s;
   letter-spacing: 0.02em;
 }
-.btn-procesar:hover:not(:disabled) { background: #15803d; }
+.btn-procesar:hover:not(:disabled) { background: var(--accent-soft); }
 .btn-procesar:active:not(:disabled) { transform: scale(0.98); }
 .btn-procesar:disabled { background: #d1d5db; cursor: not-allowed; }
 
@@ -1152,7 +1162,6 @@ body {
 
 .comprobante-opcion:hover { border-color: #86efac; }
 .comprobante-opcion.activa { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
-
 .comprobante-opcion:disabled {
   cursor: not-allowed;
   opacity: 0.45;
@@ -1171,6 +1180,7 @@ body {
   border-radius: 8px;
   margin-bottom: 12px;
 }
+
 .comprobante-datos-cliente {
   display: flex;
   flex-direction: column;

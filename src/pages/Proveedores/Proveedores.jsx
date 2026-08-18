@@ -261,7 +261,7 @@ function TabCompras({ usuario, modoSoloLectura }) {
       {mensaje.texto && <div className={`mensaje ${mensaje.tipo}`}>{mensaje.texto}</div>}
 
       {cargando ? (
-        <div className="cargando-centro">⏳ Cargando compras...</div>
+        <div className="cargando-centro">Cargando compras...</div>
       ) : comprasFiltradas.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon"></div>
@@ -454,7 +454,7 @@ function TabProveedores({ usuario, modoSoloLectura }) {
       {mensaje.texto && <div className={`mensaje ${mensaje.tipo}`}>{mensaje.texto}</div>}
 
       {cargando ? (
-        <div className="cargando-centro">⏳ Cargando proveedores...</div>
+        <div className="cargando-centro">Cargando proveedores...</div>
       ) : provFiltrados.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon"></div>
@@ -484,9 +484,9 @@ function TabProveedores({ usuario, modoSoloLectura }) {
                       : '—'}
                   </td>
                   <td className="acciones-cell">
-                    <button className="btn-editar-prov" onClick={() => { setProvEditar(p); setModalForm(true); }}></button>
+                    <button className="btn-editar-prov" onClick={() => { setProvEditar(p); setModalForm(true); }}>Editar</button>
                     {!modoSoloLectura && (
-                      <button className="btn-eliminar-prov" onClick={() => eliminarProveedor(p.id, p.nombre)}></button>
+                      <button className="btn-eliminar-prov" onClick={() => eliminarProveedor(p.id, p.nombre)}>Eliminar</button>
                     )}
                   </td>
                 </tr>
@@ -548,8 +548,8 @@ function ModalFormProveedor({ proveedor, onClose, onSuccess, onError }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-prov" onClick={e => e.stopPropagation()}>
         <div className="modal-prov-header">
-          <h3>{esEdicion ? ' Editar Proveedor' : '🆕 Nuevo Proveedor'}</h3>
-          <button className="modal-close" onClick={onClose}></button>
+          <h3>{esEdicion ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <div className="modal-prov-body">
           <div className="form-grid-2">
@@ -602,7 +602,7 @@ function ModalFormProveedor({ proveedor, onClose, onSuccess, onError }) {
         <div className="modal-prov-footer">
           <button className="btn-cancelar-modal" onClick={onClose}>Cancelar</button>
           <button className="btn-guardar-modal" onClick={guardar} disabled={guardando}>
-            {guardando ? 'Guardando...' : esEdicion ? ' Actualizar' : ' Guardar'}
+            {guardando ? 'Guardando...' : esEdicion ? 'Actualizar' : 'Guardar'}
           </button>
         </div>
       </div>
@@ -766,7 +766,7 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
         nuevos.push({
           _clave: claveUnica, producto_id: prodSelec.id, producto_nombre: prodSelec.nombre,
           variante_id: variante?.id || null, talla, cantidad,
-          precio_compra: 0, precio_venta_sugerido: variante?.precio ?? prodSelec.precio ?? 0, subtotal: 0,
+          precio_compra: '', precio_venta_sugerido: variante?.precio ?? prodSelec.precio ?? 0, subtotal: 0,
         });
       }
       if (duplicados.length > 0) onError(`Tallas ya en lista: ${duplicados.join(', ')}`);
@@ -776,9 +776,9 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
       if (items.find(i => i._clave === claveUnica)) { onError('Ese producto ya está en la lista'); return; }
       setItems(prev => [...prev, {
         _clave: claveUnica, producto_id: prodSelec.id, producto_nombre: prodSelec.nombre,
-        variante_id: null, talla: null, cantidad: 1,
+        variante_id: null, talla: null, cantidad: '',
         unidad_medida: prodSelec.unidad_medida || 'UNIDAD',
-        precio_compra: 0, precio_venta_sugerido: prodSelec.precio || 0, subtotal: 0,
+        precio_compra: '', precio_venta_sugerido: prodSelec.precio || 0, subtotal: 0,
       }]);
     }
     setProdSelec(null); setBusqProd(''); setTallasMulti({}); setVariantes([]); setDropdownVisible(false);
@@ -788,7 +788,9 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
     setItems(prev => prev.map(i => {
       if (i._clave !== clave) return i;
       const upd = { ...i, [campo]: valor };
-      upd.subtotal = upd.precio_compra * upd.cantidad;
+      // Mientras el campo está vacío (el usuario borrando para escribir un número nuevo),
+      // el subtotal se calcula como 0 en vez de NaN — no se traba el campo.
+      upd.subtotal = (parseFloat(upd.precio_compra) || 0) * (parseFloat(upd.cantidad) || 0);
       return upd;
     }));
   };
@@ -803,6 +805,7 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
   const guardar = async () => {
     if (!form.proveedor_id) { onError('Selecciona un proveedor'); return; }
     if (items.length === 0) { onError('Agrega al menos un producto'); return; }
+    if (items.some(i => !i.cantidad || i.cantidad <= 0)) { onError('Todos los productos deben tener una cantidad mayor a 0'); return; }
     if (items.some(i => i.precio_compra <= 0)) { onError('Todos los precios de compra deben ser mayores a 0'); return; }
     if (creditoAplicar > 0) {
       const prov = proveedores.find(p => p.id === parseInt(form.proveedor_id));
@@ -852,7 +855,7 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
       <div className="modal-compra" onClick={e => e.stopPropagation()}>
         <div className="modal-prov-header">
           <h3>Nueva Orden de Compra</h3>
-          <button className="modal-close" onClick={handleCerrarCompra}></button>
+          <button className="modal-close" onClick={handleCerrarCompra}>×</button>
         </div>
 
         <div className="modal-compra-body">
@@ -896,12 +899,12 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
               </div>
               <div className="form-group">
                 <label>Descuento S/</label>
-                <input type="number" min="0" value={form.descuento} onChange={e => setForm(f => ({ ...f, descuento: e.target.value }))} placeholder="0.00" />
+                <input type="number" onFocus={e => e.target.select()} min="0" value={form.descuento} onChange={e => setForm(f => ({ ...f, descuento: e.target.value }))} placeholder="0.00" />
               </div>
               {provSeleccionado?.credito_disponible > 0 && (
                 <div className="form-group">
                   <label>Aplicar crédito S/ <span className="label-max">(máx S/ {provSeleccionado.credito_disponible.toFixed(2)})</span></label>
-                  <input type="number" min="0" step="0.01"
+                  <input type="number" onFocus={e => e.target.select()} min="0" step="0.01"
                     max={provSeleccionado.credito_disponible}
                     value={form.credito_aplicar}
                     onChange={e => setForm(f => ({ ...f, credito_aplicar: e.target.value }))}
@@ -958,7 +961,7 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
                       <div key={v.talla} className={`multi-talla-chip ${seleccionada ? 'activa' : ''}`} onClick={() => toggleTallaMulti(v.talla)}>
                         <span className="multi-talla-nombre">{v.talla}</span>
                         {seleccionada ? (
-                          <input type="number" min="1" value={tallasMulti[v.talla]}
+                          <input type="number" onFocus={e => e.target.select()} min="1" value={tallasMulti[v.talla]}
                             onClick={e => e.stopPropagation()}
                             onChange={e => setCantTalla(v.talla, e.target.value)}
                             className="multi-talla-cant" autoFocus />
@@ -996,14 +999,14 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
                       autoFocus
                     />
                     <input
-                      type="number" min="0"
+                      type="number" onFocus={e => e.target.select()} min="0"
                       placeholder="Stock inicial"
                       value={nuevaTallaStock}
                       onChange={e => setNuevaTallaStock(e.target.value)}
                       className="form-talla-nueva-input"
                     />
                     <input
-                      type="number" min="0" step="0.01"
+                      type="number" onFocus={e => e.target.select()} min="0" step="0.01"
                       placeholder={`Precio (opcional)`}
                       value={nuevaTallaPrecio}
                       onChange={e => setNuevaTallaPrecio(e.target.value)}
@@ -1044,18 +1047,32 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
                       {modoNegocio !== 'LUBRICENTRO' && (
                         <td>{item.talla ? <span className="talla-chip-small">{item.talla}</span> : '—'}</td>
                       )}
-                      <td><input type="number" min="0.001" step={item.unidad_medida && item.unidad_medida !== 'UNIDAD' ? '0.001' : '1'} value={item.cantidad}
-                        onChange={e => actualizarItem(item._clave, 'cantidad',
-                          (item.unidad_medida && item.unidad_medida !== 'UNIDAD' ? parseFloat(e.target.value) : parseInt(e.target.value)) || 1)}
+                      <td><input type="number" onFocus={e => e.target.select()} min="0.001" step={item.unidad_medida && item.unidad_medida !== 'UNIDAD' ? '0.001' : '1'} value={item.cantidad} placeholder="0"
+                        onChange={e => {
+                          const raw = e.target.value;
+                          if (raw === '') { actualizarItem(item._clave, 'cantidad', ''); return; }
+                          const parsed = item.unidad_medida && item.unidad_medida !== 'UNIDAD' ? parseFloat(raw) : parseInt(raw);
+                          actualizarItem(item._clave, 'cantidad', isNaN(parsed) ? '' : parsed);
+                        }}
                         className="input-tabla" /></td>
-                      <td><input type="number" min="0" step="0.01" value={item.precio_compra}
-                        onChange={e => actualizarItem(item._clave, 'precio_compra', parseFloat(e.target.value) || 0)}
+                      <td><input type="number" onFocus={e => e.target.select()} min="0" step="0.01" value={item.precio_compra} placeholder="0.00"
+                        onChange={e => {
+                          const raw = e.target.value;
+                          if (raw === '') { actualizarItem(item._clave, 'precio_compra', ''); return; }
+                          const parsed = parseFloat(raw);
+                          actualizarItem(item._clave, 'precio_compra', isNaN(parsed) ? '' : parsed);
+                        }}
                         className="input-tabla" /></td>
-                      <td><input type="number" min="0" step="0.01" value={item.precio_venta_sugerido}
-                        onChange={e => actualizarItem(item._clave, 'precio_venta_sugerido', parseFloat(e.target.value) || 0)}
+                      <td><input type="number" onFocus={e => e.target.select()} min="0" step="0.01" value={item.precio_venta_sugerido} placeholder="0.00"
+                        onChange={e => {
+                          const raw = e.target.value;
+                          if (raw === '') { actualizarItem(item._clave, 'precio_venta_sugerido', ''); return; }
+                          const parsed = parseFloat(raw);
+                          actualizarItem(item._clave, 'precio_venta_sugerido', isNaN(parsed) ? '' : parsed);
+                        }}
                         className="input-tabla" /></td>
                       <td className="monto-cell">S/ {item.subtotal.toFixed(2)}</td>
-                      <td><button className="btn-quitar-item" onClick={() => quitarItem(item._clave)}></button></td>
+                      <td><button className="btn-quitar-item" onClick={() => quitarItem(item._clave)} title="Quitar producto">×</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -1122,6 +1139,22 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
     } catch (e) { console.error(e); }
   };
 
+  useEffect(() => {
+    if (!detalle || !detalle.compra || detalle.compra.estado === 'PENDIENTE') return;
+    setItemsDevol(prev => {
+      const next = { ...prev };
+      detalle.items.forEach(item => {
+        if (next[item.id] === undefined) {
+          const faltante = Math.max(0, item.cantidad - item.cantidad_recibida);
+          const danado = Math.max(0, item.cantidad_recibida - item.cantidad_conforme);
+          const sugerido = faltante + danado;
+          if (sugerido > 0) next[item.id] = sugerido;
+        }
+      });
+      return next;
+    });
+  }, [detalle]);
+
   const cargarDetalle = async () => {
     setCargando(true);
     try {
@@ -1129,8 +1162,10 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
       setDetalle(res);
       const initRec = {}, initConf = {};
       res.items.forEach(i => {
-        initRec[i.id]  = i.cantidad_recibida;
-        initConf[i.id] = i.cantidad_conforme;
+        // Si todavía no se registró nada (0), arranca vacío para escribir directo
+        // en vez de tener que borrar un "0" fijo primero.
+        initRec[i.id]  = i.cantidad_recibida || '';
+        initConf[i.id] = i.cantidad_conforme || '';
       });
       setCantRecibidas(initRec);
       setCantConformes(initConf);
@@ -1153,7 +1188,7 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
         request: { compra_id: compraResumen.id, items, notas_recepcion: notasRecepcion || null }
       });
 
-      // 🆕 Crear un lote de vencimiento por cada ítem que tenga fecha cargada
+      // Crear un lote de vencimiento por cada ítem que tenga fecha cargada
       // (productos perecibles) — así queda registrado FEFO desde el arranque
       for (const i of detalle.items) {
         const fecha = fechasVencimiento[i.id];
@@ -1169,6 +1204,7 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
             });
           } catch (e) {
             console.error('Error al crear lote para', i.producto_nombre, e);
+            onError(`No se pudo guardar el lote de "${i.producto_nombre}": ${e}`);
           }
         }
       }
@@ -1286,6 +1322,14 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
   const puedeRecibir = detalle?.compra.estado === 'PENDIENTE' || detalle?.compra.estado === 'PARCIAL';
   const puedePagar   = detalle?.compra.estado_pago !== 'PAGADO' && detalle?.compra.estado !== 'CANCELADA';
 
+  // Cuánto falta reclamar al proveedor (dañado + faltante) vs. cuánto ya se registró en devoluciones
+  const totalReclamable = detalle?.items.reduce((s, i) => s + Math.max(0, i.cantidad - i.cantidad_conforme), 0) || 0;
+  const totalYaDevuelto = detalle?.devoluciones?.reduce(
+    (s, d) => s + d.items.reduce((s2, it) => s2 + it.cantidad_devuelta, 0), 0
+  ) || 0;
+  // "Cerrada": ya se recibió todo (no quedó PARCIAL) y no queda nada pendiente por reclamar
+  const compraCerrada = detalle?.compra.estado === 'RECIBIDA' && totalReclamable <= totalYaDevuelto;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-detalle-compra" onClick={e => e.stopPropagation()}>
@@ -1294,11 +1338,11 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
             <h3> {compraResumen.folio}</h3>
             <p className="modal-subtitle">{compraResumen.proveedor_nombre} — {compraResumen.fecha_compra}</p>
           </div>
-          <button className="modal-close" onClick={onClose}></button>
+          <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
         {cargando ? (
-          <div className="cargando-centro">⏳ Cargando detalle...</div>
+          <div className="cargando-centro">Cargando detalle...</div>
         ) : detalle && (
           <>
             <div className="detalle-resumen">
@@ -1311,6 +1355,11 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                 </strong>
               </div>
               <div className="resumen-item"><span>Estado</span><strong>{detalle.compra.estado}</strong></div>
+              {compraCerrada && (
+                <div className="resumen-item">
+                  <span className="badge-compra-cerrada">Compra cerrada — ya no quedan acciones pendientes</span>
+                </div>
+              )}
             </div>
 
             <div className="detalle-tabs">
@@ -1387,7 +1436,7 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                     </thead>
                     <tbody>
                       {detalle.items.map(item => {
-                        const recibida = cantRecibidas[item.id] || 0;
+                        const recibida = cantRecibidas[item.id] ?? 0;
                         const conforme = cantConformes[item.id] ?? recibida;
                         const danado   = Math.max(0, recibida - conforme);
                         return (
@@ -1398,18 +1447,26 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                             )}
                             <td className="num-cell">{item.cantidad}</td>
                             <td>
-                              <input type="number" min="0" step="0.001" max={item.cantidad} value={recibida}
+                              <input type="number" onFocus={e => e.target.select()} min="0" step="0.001" max={item.cantidad} value={recibida} placeholder="0"
                                 onChange={e => {
-                                  const v = Math.min(item.cantidad, parseFloat(e.target.value) || 0);
+                                  const raw = e.target.value;
+                                  if (raw === '') {
+                                    setCantRecibidas(prev => ({ ...prev, [item.id]: '' }));
+                                    setCantConformes(prev => ({ ...prev, [item.id]: '' }));
+                                    return;
+                                  }
+                                  const v = Math.min(item.cantidad, parseFloat(raw) || 0);
                                   setCantRecibidas(prev => ({ ...prev, [item.id]: v }));
-                                  setCantConformes(prev => ({ ...prev, [item.id]: Math.min(prev[item.id] ?? v, v) }));
+                                  setCantConformes(prev => ({ ...prev, [item.id]: Math.min(prev[item.id] || v, v) }));
                                 }}
                                 className="input-tabla input-recibir" />
                             </td>
                             <td>
-                              <input type="number" min="0" step="0.001" max={recibida} value={conforme}
+                              <input type="number" onFocus={e => e.target.select()} min="0" step="0.001" max={recibida} value={conforme} placeholder="0"
                                 onChange={e => {
-                                  const v = Math.min(recibida, parseFloat(e.target.value) || 0);
+                                  const raw = e.target.value;
+                                  if (raw === '') { setCantConformes(prev => ({ ...prev, [item.id]: '' })); return; }
+                                  const v = Math.min(recibida, parseFloat(raw) || 0);
                                   setCantConformes(prev => ({ ...prev, [item.id]: v }));
                                 }}
                                 className={`input-tabla input-conforme ${danado > 0 ? 'input-conforme-warn' : ''}`} />
@@ -1446,14 +1503,18 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                     </tbody>
                   </table>
                   {(() => {
-                    const totalDanado = detalle.items.reduce((sum, item) => {
+                    let totalDanado = 0;
+                    let totalFaltante = 0;
+                    detalle.items.forEach(item => {
                       const rec  = cantRecibidas[item.id] || 0;
                       const conf = cantConformes[item.id] ?? rec;
-                      return sum + Math.max(0, rec - conf);
-                    }, 0);
-                    return totalDanado > 0 ? (
+                      totalDanado += Math.max(0, rec - conf);
+                      totalFaltante += Math.max(0, item.cantidad - rec);
+                    });
+                    const totalReclamar = totalDanado + totalFaltante;
+                    return totalReclamar > 0 ? (
                       <div className="recibir-aviso recibir-aviso-warn">
-                         <strong>{totalDanado} unidad(es) dañada(s)</strong> — recuerda registrar la devolución al proveedor después de confirmar la recepción.
+                        <strong>{totalReclamar} unidad(es) para reclamar al proveedor</strong> ({totalDanado} dañada(s) + {totalFaltante} faltante(s)) — recuerda registrar la devolución después de confirmar la recepción.
                       </div>
                     ) : null;
                   })()}
@@ -1478,7 +1539,7 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                   <div className="form-grid-2">
                     <div className="form-group">
                       <label>Monto a pagar S/ *</label>
-                      <input type="number" min="0.01" step="0.01" max={detalle.compra.saldo_pendiente}
+                      <input type="number" onFocus={e => e.target.select()} min="0.01" step="0.01" max={detalle.compra.saldo_pendiente}
                         value={formPago.monto} onChange={e => setFormPago(f => ({ ...f, monto: e.target.value }))} placeholder="0.00" />
                     </div>
                     <div className="form-group">
@@ -1595,6 +1656,11 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                     </div>
                   )}
 
+                  {compraCerrada ? (
+                    <div className="recibir-aviso">
+                      Esta compra ya está cerrada: se recibió todo lo pedido y ya no queda nada pendiente por reclamar al proveedor.
+                    </div>
+                  ) : (
                   <div className="devol-form">
                     <h4 className="devol-seccion-titulo">Registrar nueva devolución</h4>
                     <div className="form-grid-2">
@@ -1632,9 +1698,9 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                         </tr>
                       </thead>
                       <tbody>
-                        {detalle.items.filter(i => i.cantidad_recibida > 0).map(item => {
-                          const maxDevolver = item.cantidad_recibida;
-                          const cantDev = itemsDevol[item.id] || 0;
+                        {detalle.items.filter(item => item.cantidad > item.cantidad_conforme).map(item => {
+                          const maxDevolver = item.cantidad - item.cantidad_conforme;
+                          const cantDev = itemsDevol[item.id] ?? 0;
                           return (
                             <tr key={item.id} className={cantDev > 0 ? 'fila-a-devolver' : ''}>
                               <td>{item.producto_nombre}</td>
@@ -1644,11 +1710,14 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                               <td className="num-cell">{item.cantidad_recibida}</td>
                               <td className="num-cell recibido-ok">{item.cantidad_conforme}</td>
                               <td>
-                                <input type="number" min="0" max={maxDevolver} value={cantDev}
+                                <input type="number" onFocus={e => e.target.select()} min="0" max={maxDevolver} value={cantDev}
                                   onChange={e => {
-                                    const v = Math.min(maxDevolver, parseInt(e.target.value) || 0);
+                                    const raw = e.target.value;
+                                    if (raw === '') { setItemsDevol(prev => ({ ...prev, [item.id]: '' })); return; }
+                                    const v = Math.min(maxDevolver, parseInt(raw) || 0);
                                     setItemsDevol(prev => ({ ...prev, [item.id]: v }));
                                   }}
+                                  onBlur={e => { if (e.target.value === '') setItemsDevol(prev => ({ ...prev, [item.id]: 0 })); }}
                                   className="input-tabla input-devolver" />
                               </td>
                             </tr>
@@ -1660,7 +1729,7 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                     {(() => {
                       const totalMonto = detalle.items.reduce((sum, item) =>
                         sum + (itemsDevol[item.id] || 0) * item.precio_compra, 0);
-                      const totalUnidades = Object.values(itemsDevol).reduce((s, v) => s + v, 0);
+                      const totalUnidades = Object.values(itemsDevol).reduce((s, v) => s + (v || 0), 0);
                       return totalUnidades > 0 ? (
                         <div className="devol-resumen-monto">
                            <strong>{totalUnidades}</strong> unidad(es) a devolver —
@@ -1675,9 +1744,10 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                       onClick={registrarDevolucion}
                       disabled={procesando || Object.values(itemsDevol).every(v => v === 0)}
                     >
-                      {procesando ? 'Registrando...' : ' Registrar Devolución al Proveedor'}
+                      {procesando ? 'Registrando...' : 'Registrar Devolución al Proveedor'}
                     </button>
                   </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1696,11 +1766,11 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
   );
 }
 
-function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProductoCreado }) {
+function ModalNuevoProducto({ categorias, modoNegocio = 'LUBRICENTRO', onClose, onProductoCreado }) {
   const primeraCat = categorias.length > 0 ? categorias[0] : null;
   const [formData, setFormData] = useState({
     codigo: '', nombre: '', descripcion: '', precio: '',
-    stock: '0', stock_minimo: '2', unidad_medida: 'UNIDAD',
+    stock: '0', stock_minimo: '', unidad_medida: 'UNIDAD',
     categoria_id: primeraCat ? primeraCat[0] : '',
     descuento_porcentaje: 0,
   });
@@ -1752,7 +1822,7 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
           talla, stock: datos.stock, stock_minimo: datos.stock_minimo, precio: parseFloat(datos.precio),
         }))
       : null;
-    // 🆕 Con tallas, no hay "un precio general" — cada talla tiene el suyo.
+    // Con tallas, no hay "un precio general" — cada talla tiene el suyo.
     // La base de datos igual necesita un valor interno; usamos el más bajo.
     const precioParaGuardar = tieneVariantes
       ? Math.min(...variantesArray.map(v => v.precio))
@@ -1798,14 +1868,14 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
             <h3>Crear Nuevo Producto</h3>
             <p className="modal-subtitle">Se agregará al inventario y quedará disponible en esta compra</p>
           </div>
-          <button className="modal-close" onClick={onClose}></button>
+          <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <div className="modal-prov-body">
           {error && <div className="mensaje error" style={{ marginBottom: 12 }}>{error}</div>}
           <div className="form-grid-2">
             <div className="form-group">
               <label>Código *</label>
-              <input value={formData.codigo} onChange={e => setFormData(f => ({ ...f, codigo: e.target.value }))} placeholder={modoNegocio === 'LUBRICENTRO' ? 'Ej: ABAR-001' : 'Ej: POLO-AZU-001'} autoFocus />
+              <input value={formData.codigo} onChange={e => setFormData(f => ({ ...f, codigo: e.target.value }))} placeholder={modoNegocio === 'LUBRICENTRO' ? 'Ej: ACE-001' : 'Ej: POLO-AZU-001'} autoFocus />
             </div>
             <div className="form-group">
               <label>Categoría *</label>
@@ -1815,7 +1885,7 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
             </div>
             <div className="form-group full">
               <label>Nombre del Producto *</label>
-              <input value={formData.nombre} onChange={e => setFormData(f => ({ ...f, nombre: e.target.value }))} placeholder={modoNegocio === 'LUBRICENTRO' ? 'Ej: Arroz Costeño 750g' : 'Ej: Polo Cuello Redondo Azul'} />
+              <input value={formData.nombre} onChange={e => setFormData(f => ({ ...f, nombre: e.target.value }))} placeholder={modoNegocio === 'LUBRICENTRO' ? 'Ej: Aceite Mobil 20W-50 4L' : 'Ej: Polo Cuello Redondo Azul'} />
             </div>
             <div className="form-group full">
               <label>Descripción</label>
@@ -1824,13 +1894,13 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
             {!tieneVariantes && (
               <div className="form-group">
                 <label>Precio de venta S/ *</label>
-                <input type="number" step="0.01" min="0" value={formData.precio}
+                <input type="number" onFocus={e => e.target.select()} step="0.01" min="0" value={formData.precio}
                   onChange={e => setFormData(f => ({ ...f, precio: e.target.value }))} placeholder="0.00" />
               </div>
             )}
             <div className="form-group">
               <label>Stock mínimo</label>
-              <input type="number" step="0.001" min="0" value={formData.stock_minimo}
+              <input type="number" onFocus={e => e.target.select()} step="0.001" min="0" value={formData.stock_minimo}
                 onChange={e => setFormData(f => ({ ...f, stock_minimo: e.target.value }))} placeholder="2" />
             </div>
             {modoNegocio !== 'ROPA' && (
@@ -1843,6 +1913,8 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
                   <option value="GRAMO">Gramo (g)</option>
                   <option value="LITRO">Litro (L)</option>
                   <option value="ML">Mililitro (mL)</option>
+                  <option value="GALON">Galón</option>
+                  <option value="METRO">Metro (m)</option>
                 </select>
               </div>
             )}
@@ -1862,7 +1934,7 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
               {!tieneVariantes && (
                 <div className="form-group" style={{ marginTop: 10 }}>
                   <label>Stock inicial</label>
-                  <input type="number" min="0" step="0.001" value={formData.stock}
+                  <input type="number" onFocus={e => e.target.select()} min="0" step="0.001" value={formData.stock}
                     onChange={e => setFormData(f => ({ ...f, stock: e.target.value }))}
                     placeholder="0" style={{ maxWidth: 120 }} />
                   <small style={{ color: '#6b7280', fontSize: 11, marginTop: 3, display: 'block' }}>
@@ -1879,11 +1951,11 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
                         <button type="button" onClick={() => handleToggleTalla(talla)} className="talla-chip-btn">{talla}</button>
                         {sel && (
                           <div className="talla-inputs-mini">
-                            <input type="number" min="0" placeholder="Stock"
+                            <input type="number" onFocus={e => e.target.select()} min="0" placeholder="Stock"
                               value={tallasSeleccionadas[talla].stock}
                               onChange={e => handleTallaStock(talla, 'stock', e.target.value)}
                               title="Stock inicial" />
-                            <input type="number" min="0.01" step="0.01" placeholder="Precio *"
+                            <input type="number" onFocus={e => e.target.select()} min="0.01" step="0.01" placeholder="Precio *"
                               value={tallasSeleccionadas[talla].precio}
                               onChange={e => handleTallaStock(talla, 'precio', e.target.value)}
                               title="Precio de venta de esta talla" required />
@@ -1902,17 +1974,6 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'ROPA', onClose, onProdu
             </div>
           )}
 
-          {(tipoTallaCategoria === 'NINGUNA' || modoNegocio === 'LUBRICENTRO') && (
-            <div className="form-group" style={{ marginTop: 8 }}>
-              <label>Stock inicial</label>
-              <input type="number" min="0" step="0.001" value={formData.stock}
-                onChange={e => setFormData(f => ({ ...f, stock: e.target.value }))}
-                placeholder="0" style={{ maxWidth: 120 }} />
-              <small style={{ color: '#6b7280', fontSize: 11, marginTop: 3, display: 'block' }}>
-                El stock real se actualizará al recibir la mercadería
-              </small>
-            </div>
-          )}
         </div>
         <div className="modal-prov-footer">
           <button className="btn-cancelar-modal" onClick={onClose}>Cancelar</button>

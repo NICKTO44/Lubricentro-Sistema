@@ -107,7 +107,7 @@ function ReporteCierre({ reporte, onCerrar }) {
             <p className="seccion-subtitulo">Pagos registrados automáticamente — no requiere conteo físico</p>
             <div className="ventas-tabla">
               <div className="venta-fila">
-                <span className="venta-metodo">Tarjeta</span>
+                <span className="venta-metodo">Yape</span>
                 <span className="venta-monto">{formatearMoneda(reporte.caja.ventas_tarjeta || 0)}</span>
               </div>
               <div className="venta-fila">

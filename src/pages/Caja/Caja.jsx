@@ -313,7 +313,7 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                   <div className="caja-venta-item tarjeta">
                     <div className="venta-icono"><IconCreditCard size={20} stroke={2} /></div>
                     <div className="venta-info">
-                      <span className="venta-label">Tarjeta</span>
+                      <span className="venta-label">Yape</span>
                       <span className="venta-monto">{formatearMoneda(cajaActual.ventas_tarjeta)}</span>
                     </div>
                   </div>
@@ -490,7 +490,7 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                     <th>Duración</th>
                     <th>Ventas</th>
                     <th>Efectivo</th>
-                    <th>Tarjeta</th>
+                    <th>Yape</th>
                     <th>Transfer.</th>
                     <th>Puntualidad</th>
                     <th>Cuadre</th>
@@ -635,7 +635,7 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                     <span className="det-value">{formatearMoneda(detalleModal.caja.ventas_efectivo)}</span>
                   </div>
                   <div className="detalle-item">
-                    <span className="det-label">Tarjeta</span>
+                   <span className="det-label">Yape</span>
                     <span className="det-value">{formatearMoneda(detalleModal.caja.ventas_tarjeta)}</span>
                   </div>
                   <div className="detalle-item">

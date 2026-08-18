@@ -29,6 +29,8 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
   const [nubefactToken, setNubefactToken] = useState('');
   const [nubefactRuta, setNubefactRuta] = useState('');
   const [guardandoNubefact, setGuardandoNubefact] = useState(false);
+  const [probandoNubefact, setProbandoNubefact] = useState(false);
+  const [resultadoPruebaNubefact, setResultadoPruebaNubefact] = useState(null);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
 
   const [configTienda, setConfigTienda] = useState({
@@ -84,7 +86,30 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
     }
   };
 
+  // Valida el FORMATO (no llama a NubeFacT) — evita guardar cosas que
+  // claramente no son una ruta/token real, como texto vacío o basura.
+  const validarFormatoNubefact = () => {
+    if (!nubefactRuta.trim() || !nubefactToken.trim()) {
+      return 'Completa la ruta y el token.';
+    }
+    if (!/^https?:\/\/.+/i.test(nubefactRuta.trim())) {
+      return 'La ruta debe ser una URL válida (tiene que empezar con http:// o https://).';
+    }
+    if (nubefactToken.trim().length < 15) {
+      return 'El token parece incompleto — revisa que lo copiaste entero desde NubeFacT.';
+    }
+    return null;
+  };
+
+  const facturacionConfigurada = !!(nubefactToken && nubefactRuta) && !validarFormatoNubefact();
+  const facturacionVerificada = facturacionConfigurada && resultadoPruebaNubefact?.success === true;
+
   const guardarNubefact = async () => {
+    const errorFormato = validarFormatoNubefact();
+    if (errorFormato) {
+      alert(errorFormato);
+      return;
+    }
     setGuardandoNubefact(true);
     try {
       const resultado = await invoke('guardar_token_nubefact', {
@@ -96,6 +121,27 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
       alert('Error: ' + error);
     } finally {
       setGuardandoNubefact(false);
+    }
+  };
+
+  const probarConexionNubefact = async () => {
+    const errorFormato = validarFormatoNubefact();
+    if (errorFormato) {
+      setResultadoPruebaNubefact({ success: false, mensaje: errorFormato });
+      return;
+    }
+    setProbandoNubefact(true);
+    setResultadoPruebaNubefact(null);
+    try {
+      const resultado = await invoke('probar_credenciales_nubefact', {
+        token: nubefactToken,
+        ruta: nubefactRuta,
+      });
+      setResultadoPruebaNubefact(resultado);
+    } catch (error) {
+      setResultadoPruebaNubefact({ success: false, mensaje: String(error) });
+    } finally {
+      setProbandoNubefact(false);
     }
   };
 
@@ -150,11 +196,11 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
       });
     } else {
       setCategoriaEditando(null);
-      // En modo Lubricentro no tiene sentido ofrecer tallas de ropa/calzado por defecto
+      // En modo MINIMARKET no tiene sentido ofrecer tallas de ropa/calzado por defecto
       setFormCategoria({
         nombre: '',
         descripcion: '',
-        tipo_talla: configTienda.modo_negocio === 'LUBRICENTRO' ? 'NINGUNA' : 'ROPA',
+        tipo_talla: configTienda.modo_negocio === 'MINIMARKET' ? 'NINGUNA' : 'ROPA',
       });
     }
     setModalCategoria(true);
@@ -281,7 +327,7 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
   return (
     <div className="configuracion-container">
       <div className="configuracion-header">
-        
+        <button onClick={onVolver} className="btn-volver">Volver</button>
         <h2>Configuracion del Sistema</h2>
         <div className="configuracion-usuario">{usuario.nombre_completo}</div>
       </div>
@@ -513,22 +559,31 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
                 <h3>Facturación Electrónica (SUNAT)</h3>
               </div>
 
+             
               <p className="facturacion-intro">
                 Conectá tu cuenta de <strong>NubeFacT</strong> (u otro proveedor compatible) para poder
-                emitir boletas y facturas electrónicas válidas ante SUNAT directamente desde el Punto de Venta.
-                {nubefactToken && nubefactRuta ? (
-                  <span className="facturacion-estado-badge activo">Configurado</span>
+                emitir boletas y facturas electrónicas válidas ante SUNAT directamente desde el Punto de Venta.{' '}
+                {facturacionVerificada ? (
+                  <span className="facturacion-estado-badge activo">Configurado y verificado</span>
+                ) : facturacionConfigurada ? (
+                  <span className="facturacion-estado-badge advertencia">Sin verificar — probá la conexión</span>
                 ) : (
-                  <span className="facturacion-estado-badge inactivo"> ○ No configurado</span>
+                  <span className="facturacion-estado-badge inactivo">No configurado</span>
                 )}
               </p>
+              {facturacionConfigurada && !facturacionVerificada && !resultadoPruebaNubefact && (
+                <div className="facturacion-aviso-sin-probar">
+                  El formato de la ruta y el token se ven bien, pero todavía no confirmaste que funcionen de verdad — usa "Probar conexión" antes de dar por hecho que ya puedes emitir boletas o facturas.
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Ruta de tu cuenta NubeFacT</label>
                 <input
                   type="text"
                   value={nubefactRuta}
-                  onChange={(e) => setNubefactRuta(e.target.value)}
+                  onChange={(e) => { setNubefactRuta(e.target.value); setResultadoPruebaNubefact(null); }}
+
                   placeholder="https://api.nubefact.com/api/v1/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                 />
                 <small className="form-hint">La encontrás en tu cuenta de NubeFacT "Api (Integración)"</small>
@@ -539,21 +594,36 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
                 <input
                   type="password"
                   value={nubefactToken}
-                  onChange={(e) => setNubefactToken(e.target.value)}
+                  onChange={(e) => { setNubefactToken(e.target.value); setResultadoPruebaNubefact(null); }}
                   placeholder="Tu token de acceso"
                 />
               </div>
 
-              <button
-                className="btn-guardar-nubefact"
-                onClick={guardarNubefact}
-                disabled={guardandoNubefact}
-              >
-                {guardandoNubefact ? 'Guardando...' : 'Guardar datos de facturación'}
-              </button>
+              <div className="facturacion-acciones">
+                <button
+                  className="btn-guardar-nubefact"
+                  onClick={guardarNubefact}
+                  disabled={guardandoNubefact}
+                >
+                  {guardandoNubefact ? 'Guardando...' : 'Guardar datos de facturación'}
+                </button>
+                <button
+                  className="btn-probar-nubefact"
+                  onClick={probarConexionNubefact}
+                  disabled={probandoNubefact}
+                >
+                  {probandoNubefact ? 'Probando conexión...' : 'Probar conexión'}
+                </button>
+              </div>
+
+              {resultadoPruebaNubefact && (
+                <div className={`facturacion-resultado-prueba ${resultadoPruebaNubefact.success ? 'ok' : 'error'}`}>
+                  {resultadoPruebaNubefact.mensaje}
+                </div>
+              )}
 
               <p className="facturacion-nota">
-                 Cada negocio necesita su propia cuenta de NubeFacT (con su propio RUC) — no se comparte
+                Cada negocio necesita su propia cuenta de NubeFacT (con su propio RUC) — no se comparte
                 entre instalaciones distintas. Si todavía no tenés cuenta, podés crear una gratis en{' '}
                 <strong>nubefact.com</strong> para empezar a probar sin costo (modo Demo).
               </p>
@@ -589,7 +659,7 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
                   onChange={(e) => setFormCategoria({...formCategoria, descripcion: e.target.value})} rows="3" />
               </div>
               {/* 🆕 Tipo de categoría: solo tiene sentido ofrecer tallas de ropa/calzado en modo ROPA */}
-              {configTienda.modo_negocio === 'LUBRICENTRO' ? (
+              {configTienda.modo_negocio === 'MINIMARKET' ? (
                 <div className="form-group">
                   <label>Tipo</label>
                   <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0' }}>

@@ -645,6 +645,94 @@ pub fn run_migrations(db_path: &str) -> Result<()> {
         }
     }
 
+    // =====================================================
+    // Migración: agregar 'GALON' y 'METRO' al CHECK de unidad_medida
+    // en productos. SQLite no permite modificar un CHECK existente con
+    // ALTER TABLE, así que hay que recrear la tabla completa,
+    // preservando todos los productos ya guardados.
+    // =====================================================
+    let sql_productos: String = conn
+        .query_row(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='productos'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or_default();
+
+if !sql_productos.contains("'METRO'") {
+        println!("Actualizando restricción de unidad_medida en productos (agregando GALON y METRO)...");
+
+        // Guardamos el SQL exacto de TODOS los triggers que existan ahora mismo,
+        // sean los que sean — así no hace falta saber de antemano cuáles
+        // mencionan "productos". Los recreamos tal cual, al final.
+        let triggers_sql: Vec<String> = {
+            let mut stmt = conn.prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND sql IS NOT NULL")?;
+            let filas = stmt.query_map([], |row| row.get::<_, String>(0))?;
+            filas.filter_map(|r| r.ok()).collect()
+        };
+        let triggers_nombres: Vec<String> = {
+            let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='trigger'")?;
+            let filas = stmt.query_map([], |row| row.get::<_, String>(0))?;
+            filas.filter_map(|r| r.ok()).collect()
+        };
+
+        conn.execute_batch("PRAGMA foreign_keys=OFF; BEGIN TRANSACTION;")?;
+
+        for nombre in &triggers_nombres {
+            conn.execute(&format!("DROP TRIGGER IF EXISTS {}", nombre), [])?;
+        }
+
+        conn.execute_batch(
+            "CREATE TABLE productos_nueva (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               codigo TEXT NOT NULL UNIQUE,
+               nombre TEXT NOT NULL,
+               descripcion TEXT,
+               precio REAL NOT NULL CHECK (precio > 0),
+               stock REAL NOT NULL DEFAULT 0 CHECK (stock >= 0),
+               stock_minimo REAL DEFAULT 5,
+               unidad_medida TEXT NOT NULL DEFAULT 'UNIDAD' CHECK (unidad_medida IN ('UNIDAD', 'KG', 'GRAMO', 'LITRO', 'ML', 'GALON', 'METRO')),
+               viscosidad TEXT,
+               categoria_id INTEGER NOT NULL,
+               descuento_porcentaje REAL DEFAULT 0,
+               tiene_variantes INTEGER DEFAULT 0,
+               lleva_vencimiento INTEGER DEFAULT 0,
+               imagen_url TEXT,
+               activo INTEGER DEFAULT 1,
+               fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),
+               fecha_actualizacion TEXT DEFAULT (datetime('now', 'localtime')),
+               FOREIGN KEY (categoria_id) REFERENCES categorias(id)
+             );
+
+             INSERT INTO productos_nueva (
+               id, codigo, nombre, descripcion, precio, stock, stock_minimo,
+               unidad_medida, viscosidad, categoria_id, descuento_porcentaje,
+               tiene_variantes, lleva_vencimiento, imagen_url, activo,
+               fecha_creacion, fecha_actualizacion
+             )
+             SELECT
+               id, codigo, nombre, descripcion, precio, stock, stock_minimo,
+               unidad_medida, viscosidad, categoria_id, descuento_porcentaje,
+               tiene_variantes, lleva_vencimiento, imagen_url, activo,
+               fecha_creacion, fecha_actualizacion
+             FROM productos;
+
+             DROP TABLE productos;
+             ALTER TABLE productos_nueva RENAME TO productos;
+
+             CREATE INDEX idx_productos_codigo ON productos(codigo);
+             CREATE INDEX idx_productos_nombre ON productos(nombre);"
+        )?;
+
+        // Recrear cada trigger, exactamente con el mismo SQL que tenía antes
+        for trigger_sql in &triggers_sql {
+            conn.execute(trigger_sql, [])?;
+        }
+
+     conn.execute_batch("COMMIT; PRAGMA foreign_keys=ON;")?;
+        println!("Restricción de unidad_medida actualizada (GALON y METRO agregados) — {} triggers restaurados", triggers_sql.len());
+    }
+
     println!("Base de datos actualizada");
     Ok(())
 }

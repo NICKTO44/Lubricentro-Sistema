@@ -1,5 +1,7 @@
+// DESPUÉS
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import logoBeltran from '../../assets/logo-beltran-full.png';
 import './Login.css';
 
 function Login({ onLoginSuccess }) {
@@ -38,8 +40,8 @@ function Login({ onLoginSuccess }) {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
-          <div className="login-logo">DW</div>
-          <h1 className="login-title">Lubricentro</h1>
+      
+          <img src={logoBeltran} alt="Multiservicios Beltrán" className="login-logo-img" />
           <p className="login-subtitle">Ingresa tus credenciales para continuar</p>
         </div>
 

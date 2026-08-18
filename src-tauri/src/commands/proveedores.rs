@@ -469,12 +469,24 @@ pub fn recibir_mercaderia(
     let nuevo_estado = if items_completos == total_items { "RECIBIDA" } else { "PARCIAL" };
 
     // Calcular cuántos llegaron dañados en total
+    // DESPUÉS
+    // Faltante = nunca llegó (pedido - recibido). Dañado = llegó pero en mal estado (recibido - conforme).
+    // Ambos se le reclaman al proveedor.
+    let total_faltantes: f64 = conn.query_row(
+        "SELECT COALESCE(SUM(cantidad - cantidad_recibida), 0)
+         FROM detalles_compra WHERE compra_id = ?",
+        params![request.compra_id],
+        |row| row.get(0),
+    ).unwrap_or(0.0);
+
     let total_danados: f64 = conn.query_row(
         "SELECT COALESCE(SUM(cantidad_recibida - cantidad_conforme), 0)
          FROM detalles_compra WHERE compra_id = ?",
         params![request.compra_id],
         |row| row.get(0),
     ).unwrap_or(0.0);
+
+    let total_a_reclamar = total_faltantes + total_danados;
 
     // Actualizar estado — los triggers trg_after_compra_recibida y
     // trg_recalcular_total_compra se disparan automáticamente
@@ -495,11 +507,12 @@ pub fn recibir_mercaderia(
         };
     }
 
-    let msg = if total_danados > 0.0 {
+   // DESPUÉS
+    let msg = if total_a_reclamar > 0.0 {
         format!(
-            "Mercadería {}. {} unidad(es) dañada(s) — recuerda registrar la devolución al proveedor.",
+            "Mercadería {}. {} unidad(es) para reclamar al proveedor ({} dañada(s) + {} faltante(s)) — recuerda registrar la devolución.",
             if nuevo_estado == "RECIBIDA" { "recibida completamente" } else { "recibida parcialmente" },
-            total_danados
+            total_a_reclamar, total_danados, total_faltantes
         )
     } else {
         format!(

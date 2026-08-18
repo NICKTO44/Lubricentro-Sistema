@@ -154,7 +154,7 @@
 }
 
 .btn-turno:hover {
-  border-color: #4A6FA5;
+  border-color: #E4433D;
   background: #f8f9ff;
 }
 
@@ -230,7 +230,7 @@
 
 .input-moneda input:focus {
   outline: none;
-  border-color: #4A6FA5;
+  border-color: #E4433D;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -266,7 +266,7 @@ textarea {
 
 textarea:focus {
   outline: none;
-  border-color: #4A6FA5;
+  border-color: #E4433D;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 

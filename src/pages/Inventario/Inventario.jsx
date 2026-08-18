@@ -2,10 +2,6 @@ import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import './Inventario.css';
 
-// Tallas predefinidas según tipo de categoría
-const TALLAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const TALLAS_CALZADO = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44'];
-
 // 🆕 Tamaño del thumbnail que se guarda en la base de datos
 const TAMANO_IMAGEN = 200; // px (cuadrado)
 const CALIDAD_JPEG = 0.8;
@@ -46,14 +42,14 @@ function procesarImagen(archivo) {
   });
 }
 
-// Formatea el stock con su unidad: "10" (unidad), "2.5 kg", "500 g", etc.
+// Formatea el stock con su unidad: "10" (unidad), "2.5 kg", "500 g", "3 m", etc.
 function formatearStock(cantidad, unidadMedida) {
   const num = Number(cantidad) || 0;
-  const unidades = { KG: 'kg', GRAMO: 'g', LITRO: 'L', ML: 'mL' };
+  const unidades = { KG: 'kg', GRAMO: 'g', LITRO: 'L', ML: 'mL', GALON: 'gal', METRO: 'm' };
   if (!unidadMedida || unidadMedida === 'UNIDAD') {
     return Number.isInteger(num) ? num.toString() : num.toFixed(2);
   }
-  // Para peso/volumen, mostrar hasta 3 decimales, sin ceros de más
+  // Para peso/volumen/longitud, mostrar hasta 3 decimales, sin ceros de más
   const texto = num.toFixed(3).replace(/\.?0+$/, '');
   return `${texto} ${unidades[unidadMedida] || ''}`.trim();
 }
@@ -91,13 +87,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
   });
   const [procesandoImagen, setProcesandoImagen] = useState(false);
   const [errorImagen, setErrorImagen] = useState('');
-  const [modoNegocio, setModoNegocio] = useState('LUBRICENTRO');; 
-
-  // Estado de tallas
-  const [tieneVariantes, setTieneVariantes] = useState(false);
-  const [tipoTallaCategoria, setTipoTallaCategoria] = useState('NINGUNA');
-  // { 'S': { activa: true, stock: 3, stock_minimo: 2 }, ... }
-  const [tallasSeleccionadas, setTallasSeleccionadas] = useState({});
+  const [modoNegocio, setModoNegocio] = useState('LUBRICENTRO');
 
   useEffect(() => {
     cargarProductos();
@@ -108,7 +98,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
   const cargarModoNegocio = async () => {
     try {
       const config = await invoke('obtener_configuracion_tienda');
-      setModoNegocio(config.modo_negocio || 'ROPA');
+      setModoNegocio(config.modo_negocio || 'LUBRICENTRO');
     } catch (error) {
       console.error('Error al cargar modo de negocio:', error);
     }
@@ -151,39 +141,8 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
     }
   };
 
-  // Al cambiar categoría en el form actualizar tipo de talla
   const handleCategoriaChange = (categoriaId) => {
     setFormData(f => ({ ...f, categoria_id: categoriaId }));
-    const cat = categorias.find(([id]) => id.toString() === categoriaId.toString());
-    const tipo = cat ? cat[2] : 'NINGUNA';
-    setTipoTallaCategoria(tipo);
-    if (tipo === 'NINGUNA') {
-      setTieneVariantes(false);
-      setTallasSeleccionadas({});
-    }
-  };
-
-  const handleToggleVariantes = (activar) => {
-    setTieneVariantes(activar);
-    if (!activar) setTallasSeleccionadas({});
-  };
-
-  const handleToggleTalla = (talla) => {
-    setTallasSeleccionadas(prev => {
-      if (prev[talla]) {
-        const nuevo = { ...prev };
-        delete nuevo[talla];
-        return nuevo;
-      }
-      return { ...prev, [talla]: { stock: 0, stock_minimo: 2, precio: '' } };
-    });
-  };
-
-  const handleTallaStockChange = (talla, campo, valor) => {
-    setTallasSeleccionadas(prev => ({
-      ...prev,
-      [talla]: { ...prev[talla], [campo]: campo === 'precio' ? valor : (parseInt(valor) || 0) },
-    }));
   };
 
   // 🆕 Al seleccionar un archivo de imagen: recortar, redimensionar y comprimir
@@ -197,7 +156,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       setFormData(f => ({ ...f, imagen_url: dataUri }));
     } catch (error) {
       console.error('Error al procesar imagen:', error);
-      setErrorImagen(' No se pudo procesar la imagen. Probá con otro archivo.');
+      setErrorImagen('No se pudo procesar la imagen. Probá con otro archivo.');
     } finally {
       setProcesandoImagen(false);
       e.target.value = ''; // permite re-seleccionar el mismo archivo si hace falta
@@ -210,7 +169,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
 
   const abrirModalNuevo = () => {
     if (modoSoloLectura) {
-      mostrarMensaje('error', ' Activa tu licencia para agregar productos');
+      mostrarMensaje('error', 'Activa tu licencia para agregar productos');
       return;
     }
     setProductoEditando(null);
@@ -230,9 +189,6 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       imagen_url: null,
       viscosidad: '',
     });
-    setTieneVariantes(false);
-    setTallasSeleccionadas({});
-    setTipoTallaCategoria(primeraCat ? primeraCat[2] : 'NINGUNA');
     setErrorImagen('');
     setMostrarModal(true);
   };
@@ -245,7 +201,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       const lotes = await invoke('obtener_lotes_de_producto', { productoId: producto.id });
       setModalLotes({ producto, lotes });
     } catch (e) {
-      mostrarMensaje('error', ` Error al cargar los lotes: ${e}`);
+      mostrarMensaje('error', `Error al cargar los lotes: ${e}`);
     } finally {
       setCargandoLotes(false);
     }
@@ -260,7 +216,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
 
   const abrirModalEditar = async (producto) => {
     if (modoSoloLectura) {
-      mostrarMensaje('error', ' Activa tu licencia para editar productos');
+      mostrarMensaje('error', 'Activa tu licencia para editar productos');
       return;
     }
     setProductoEditando(producto);
@@ -279,76 +235,23 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       viscosidad: producto.viscosidad || '',
     });
     setErrorImagen('');
-    const cat = categorias.find(([id]) => id.toString() === producto.categoria_id.toString());
-    const tipo = cat ? cat[2] : 'NINGUNA';
-    setTipoTallaCategoria(tipo);
-    setTieneVariantes(producto.tiene_variantes || false);
-
-    // Cargar variantes existentes si tiene
-    if (producto.tiene_variantes) {
-      try {
-        const vars = await invoke('obtener_variantes_producto', { productoId: producto.id });
-        const tallasMap = {};
-        vars.forEach(v => {
-          tallasMap[v.talla] = { stock: v.stock, stock_minimo: v.stock_minimo, precio: v.precio ?? '' };
-        });
-        setTallasSeleccionadas(tallasMap);
-      } catch (e) {
-        console.error('Error al cargar variantes:', e);
-        setTallasSeleccionadas({});
-      }
-    } else {
-      setTallasSeleccionadas({});
-    }
-
     setMostrarModal(true);
   };
 
   const cerrarModal = () => {
     setMostrarModal(false);
     setProductoEditando(null);
-    setTieneVariantes(false);
-    setTallasSeleccionadas({});
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (modoSoloLectura) {
-      mostrarMensaje('error', ' Activa tu licencia para guardar cambios');
+      mostrarMensaje('error', 'Activa tu licencia para guardar cambios');
       cerrarModal();
       return;
     }
 
-    if (tieneVariantes && Object.keys(tallasSeleccionadas).length === 0) {
-      mostrarMensaje('error', ' Selecciona al menos una talla');
-      return;
-    }
-
-    if (tieneVariantes) {
-      const tallaSinPrecio = Object.entries(tallasSeleccionadas).find(
-        ([, datos]) => !datos.precio || parseFloat(datos.precio) <= 0
-      );
-      if (tallaSinPrecio) {
-        mostrarMensaje('error', ` Falta el precio de la talla ${tallaSinPrecio[0]}`);
-        return;
-      }
-    }
-
-    const variantesArray = tieneVariantes
-      ? Object.entries(tallasSeleccionadas).map(([talla, datos]) => ({
-          talla,
-          stock: datos.stock,
-          stock_minimo: datos.stock_minimo,
-          precio: datos.precio === '' || datos.precio === undefined ? null : parseFloat(datos.precio),
-        }))
-      : null;
-
-    // 🆕 Si tiene tallas, el producto ya no pide "un precio general" — cada talla
-    // tiene el suyo. Igual la base de datos necesita un valor interno (nunca se
-    // le muestra al usuario), así que usamos el más bajo de las tallas cargadas.
-    const precioParaGuardar = tieneVariantes
-      ? Math.min(...variantesArray.map(v => v.precio).filter(p => p > 0))
-      : parseFloat(formData.precio);
+    const precioParaGuardar = parseFloat(formData.precio);
 
     setGuardando(true);
     try {
@@ -359,30 +262,30 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
           nombre: formData.nombre,
           descripcion: formData.descripcion || null,
           precio: precioParaGuardar,
-          stock: tieneVariantes ? 0 : parseFloat(formData.stock),
+          stock: parseFloat(formData.stock),
           stockMinimo: parseFloat(formData.stock_minimo),
           unidadMedida: formData.unidad_medida,
           llevaVencimiento: formData.lleva_vencimiento,
           categoriaId: parseInt(formData.categoria_id),
           descuentoPorcentaje: parseFloat(formData.descuento_porcentaje) || 0,
-          tieneVariantes: tieneVariantes,
-          variantes: variantesArray,
+          tieneVariantes: false,
+          variantes: null,
           imagenUrl: formData.imagen_url || null,
           viscosidad: formData.viscosidad || null,
         });
         if (resultado.success) {
-          mostrarMensaje('success', ' Producto actualizado correctamente');
+          mostrarMensaje('success', 'Producto actualizado correctamente');
           cerrarModal();
           cargarProductos();
         } else {
-          mostrarMensaje('error', ` ${resultado.message}`);
+          mostrarMensaje('error', `${resultado.message}`);
         }
       } else {
         // 🆕 Si lleva vencimiento, el producto se crea con stock 0 —
         // el stock inicial se agrega aparte, como el primer lote (con su
         // propia fecha), para que nunca quede stock "suelto" fuera de un lote.
         const stockInicialLote = formData.lleva_vencimiento ? parseFloat(formData.stock) || 0 : 0;
-        const stockParaProducto = (tieneVariantes || formData.lleva_vencimiento) ? 0 : parseFloat(formData.stock);
+        const stockParaProducto = formData.lleva_vencimiento ? 0 : parseFloat(formData.stock);
 
         const resultado = await invoke('agregar_producto', {
           producto: {
@@ -396,8 +299,8 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
             lleva_vencimiento: formData.lleva_vencimiento,
             categoria_id: parseInt(formData.categoria_id),
             descuento_porcentaje: parseFloat(formData.descuento_porcentaje) || 0,
-            tiene_variantes: tieneVariantes,
-            variantes: variantesArray,
+            tiene_variantes: false,
+            variantes: null,
             imagen_url: formData.imagen_url || null,
             viscosidad: formData.viscosidad || null,
           },
@@ -419,19 +322,19 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                 });
               }
             } catch (e) {
-              mostrarMensaje('error', ` Producto creado, pero falló el lote inicial: ${e}`);
+              mostrarMensaje('error', `Producto creado, pero falló el lote inicial: ${e}`);
             }
           }
-          mostrarMensaje('success', ' Producto agregado correctamente');
+          mostrarMensaje('success', 'Producto agregado correctamente');
           cerrarModal();
           cargarProductos();
         } else {
-          mostrarMensaje('error', ` ${resultado.message}`);
+          mostrarMensaje('error', `${resultado.message}`);
         }
       }
     } catch (error) {
       console.error('Error al guardar producto:', error);
-      mostrarMensaje('error', ' Error al guardar producto');
+      mostrarMensaje('error', 'Error al guardar producto');
     } finally {
       setGuardando(false);
     }
@@ -452,7 +355,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       setIdsProductosPorVencer(new Set(lotes.map(l => l.producto_id)));
       setMostrarPorVencer(true);
     } catch (e) {
-      mostrarMensaje('error', ` Error al cargar productos por vencer: ${e}`);
+      mostrarMensaje('error', `Error al cargar productos por vencer: ${e}`);
     }
   };
 
@@ -467,15 +370,11 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
     return coincideTexto && coincideCategoria && coincidePorVencer;
   });
 
-  const tallasDisponibles = tipoTallaCategoria === 'CALZADO' ? TALLAS_CALZADO : TALLAS_ROPA;
-  const stockTotalVariantes = Object.values(tallasSeleccionadas).reduce((s, t) => s + (t.stock || 0), 0);
-
   return (
     <div className="inventario-container">
       <div className="inventario-header">
-       
         <h2>Gestión de Inventario</h2>
-        <div className="inventario-usuario"> {usuario.nombre_completo}</div>
+        <div className="inventario-usuario">{usuario.nombre_completo}</div>
       </div>
 
       {modoSoloLectura && (
@@ -493,7 +392,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
           <div className="toolbar-left">
             <input
               type="text"
-              placeholder=" Buscar producto..."
+              placeholder="Buscar producto..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
               className="input-buscar"
@@ -511,17 +410,17 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
           </div>
           <div className="toolbar-right">
             <button onClick={() => { setMostrarStockBajo(false); setMostrarPorVencer(false); cargarProductos(); }} className="btn-todos">
-               Todos
+              Todos
             </button>
             <button onClick={cargarProductosStockBajo} className="btn-stock-bajo">
-               Stock Bajo
+              Stock Bajo
             </button>
             {modoNegocio === 'LUBRICENTRO' && (
               <button
                 onClick={cargarProductosPorVencer}
                 className={`btn-stock-bajo ${mostrarPorVencer ? 'btn-por-vencer-activo' : ''}`}
               >
-                ⏳ Por Vencer
+                Por Vencer
               </button>
             )}
             <button
@@ -530,7 +429,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
               disabled={modoSoloLectura}
               style={{ opacity: modoSoloLectura ? 0.6 : 1, cursor: modoSoloLectura ? 'not-allowed' : 'pointer' }}
             >
-              {modoSoloLectura ? ' Nuevo Producto' : ' Nuevo Producto'}
+              Nuevo Producto
             </button>
           </div>
         </div>
@@ -577,7 +476,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
               {productosFiltrados.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="sin-resultados">
-                    {mostrarStockBajo ? ' No hay productos con stock bajo' : 'No se encontraron productos'}
+                    {mostrarStockBajo ? 'No hay productos con stock bajo' : 'No se encontraron productos'}
                   </td>
                 </tr>
               ) : (
@@ -594,12 +493,6 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                     <td className="nombre-col">
                       <div className="nombre-producto">
                         {producto.nombre}
-                        {producto.tiene_variantes && (
-                          <span className="badge-tallas">
-                            {/* detectar si es calzado por categoría */}
-                            Tallas
-                          </span>
-                        )}
                         {producto.viscosidad && (
                           <span className="badge-viscosidad">
                             {producto.viscosidad}
@@ -658,8 +551,8 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
         <div className="modal-overlay">
           <div className="modal-content modal-content-grande">
             <div className="modal-header">
-              <h3>{productoEditando ? ' Editar Producto' : ' Nuevo Producto'}</h3>
-              <button onClick={cerrarModal} className="btn-cerrar-modal"></button>
+              <h3>{productoEditando ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+              <button onClick={cerrarModal} className="btn-cerrar-modal">X</button>
             </div>
 
             <form onSubmit={handleSubmit} className="form-producto">
@@ -713,7 +606,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                   </div>
                   <div className="imagen-uploader-acciones">
                     <label className="btn-subir-imagen">
-                      {procesandoImagen ? 'Procesando...' : (formData.imagen_url ? ' Cambiar imagen' : ' Subir imagen')}
+                      {procesandoImagen ? 'Procesando...' : (formData.imagen_url ? 'Cambiar imagen' : 'Subir imagen')}
                       <input
                         type="file"
                         accept="image/*"
@@ -724,14 +617,14 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                     </label>
                     {formData.imagen_url && (
                       <button type="button" onClick={quitarImagen} className="btn-quitar-imagen">
-                         Quitar
+                        Quitar
                       </button>
                     )}
                   </div>
                 </div>
                 {errorImagen && <small className="imagen-error">{errorImagen}</small>}
                 <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
-                   Opcional. Se ajusta automáticamente a miniatura cuadrada.
+                  Opcional. Se ajusta automáticamente a miniatura cuadrada.
                 </small>
               </div>
 
@@ -747,17 +640,15 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
 
               {/* Precio + Stock mínimo + Unidad + Descuento */}
               <div className="form-row">
-                {!tieneVariantes && (
-                  <div className="form-group">
-                    <label>Precio *</label>
-                    <input
-                      type="number" step="0.01"
-                      value={formData.precio}
-                      onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
-                      required
-                    />
-                  </div>
-                )}
+                <div className="form-group">
+                  <label>Precio *</label>
+                  <input
+                    type="number" step="0.01"
+                    value={formData.precio}
+                    onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
+                    required
+                  />
+                </div>
                 <div className="form-group">
                   <label>Stock Mínimo *</label>
                   <input
@@ -767,54 +658,51 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                     required
                   />
                 </div>
-                {modoNegocio !== 'ROPA' && (
-                  <>
-                    <div className="form-group">
-                      <label>Unidad de Venta *</label>
-                      <select
-                        value={formData.unidad_medida}
-                        onChange={(e) => setFormData({ ...formData, unidad_medida: e.target.value })}
-                      >
-                        <option value="UNIDAD">Unidad</option>
-                        <option value="KG">Kilogramo (kg)</option>
-                        <option value="GRAMO">Gramo (g)</option>
-                        <option value="LITRO">Litro (L)</option>
-                        <option value="ML">Mililitro (mL)</option>
-                        <option value="GALON">Galón</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Viscosidad SAE (opcional)</label>
-                      <input
-                        type="text"
-                        placeholder="Ej: 20W-50"
-                        value={formData.viscosidad}
-                        onChange={(e) => setFormData({ ...formData, viscosidad: e.target.value })}
-                      />
-                      <small className="form-hint">Solo aplica a aceites y lubricantes</small>
-                    </div>
-                    <div className="form-group">
-                      <label>Vencimiento</label>
-                      <div className="toggle-vencimiento">
-                        <button
-                          type="button"
-                          className={`toggle-opcion ${!formData.lleva_vencimiento ? 'activo' : ''}`}
-                          onClick={() => setFormData({ ...formData, lleva_vencimiento: false })}
-                        >
-                          No vence
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-opcion ${formData.lleva_vencimiento ? 'activo' : ''}`}
-                          onClick={() => setFormData({ ...formData, lleva_vencimiento: true })}
-                        >
-                          Lleva vencimiento
-                        </button>
-                      </div>
-                      <small className="form-hint">Ej: lácteos, panificados sí — licores, pilas, detergentes no</small>
-                    </div>
-                  </>
-                )}
+                <div className="form-group">
+                  <label>Unidad de Venta *</label>
+                  <select
+                    value={formData.unidad_medida}
+                    onChange={(e) => setFormData({ ...formData, unidad_medida: e.target.value })}
+                  >
+                    <option value="UNIDAD">Unidad</option>
+                    <option value="KG">Kilogramo (kg)</option>
+                    <option value="GRAMO">Gramo (g)</option>
+                    <option value="LITRO">Litro (L)</option>
+                    <option value="ML">Mililitro (mL)</option>
+                    <option value="GALON">Galón</option>
+                    <option value="METRO">Metro (m)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Viscosidad SAE (opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: 20W-50"
+                    value={formData.viscosidad}
+                    onChange={(e) => setFormData({ ...formData, viscosidad: e.target.value })}
+                  />
+                  <small className="form-hint">Solo aplica a aceites y lubricantes</small>
+                </div>
+                <div className="form-group">
+                  <label>Vencimiento</label>
+                  <div className="toggle-vencimiento">
+                    <button
+                      type="button"
+                      className={`toggle-opcion ${!formData.lleva_vencimiento ? 'activo' : ''}`}
+                      onClick={() => setFormData({ ...formData, lleva_vencimiento: false })}
+                    >
+                      No vence
+                    </button>
+                    <button
+                      type="button"
+                      className={`toggle-opcion ${formData.lleva_vencimiento ? 'activo' : ''}`}
+                      onClick={() => setFormData({ ...formData, lleva_vencimiento: true })}
+                    >
+                      Lleva vencimiento
+                    </button>
+                  </div>
+                  <small className="form-hint">Ej: aceites, refrigerante, líquido de frenos, aditivos sí — filtros, accesorios no</small>
+                </div>
                 <div className="form-group">
                   <label>Descuento %</label>
                   <input
@@ -826,171 +714,61 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                 </div>
               </div>
 
-              {/* ============ SECCIÓN TALLAS ============ */}
-              {/* 🆕 En modo Lubricentro nunca se ofrecen tallas, sin importar la categoría */}
-              {tipoTallaCategoria !== 'NINGUNA' && modoNegocio !== 'LUBRICENTRO' ? (
-                <div className="seccion-tallas">
-                  <div className="tallas-header">
-                    <span className="tallas-titulo">
-                      {tipoTallaCategoria === 'CALZADO' ? '' : ''} Tallas
-                    </span>
-                    <div className="tallas-toggle">
-                      <button
-                        type="button"
-                        className={`toggle-btn ${!tieneVariantes ? 'activo' : ''}`}
-                        onClick={() => handleToggleVariantes(false)}
-                      >
-                        Sin tallas
-                      </button>
-                      <button
-                        type="button"
-                        className={`toggle-btn ${tieneVariantes ? 'activo' : ''}`}
-                        onClick={() => handleToggleVariantes(true)}
-                      >
-                        Con tallas
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Sin variantes stock único */}
-                  {!tieneVariantes && (
-                    <div className="form-group" style={{ marginTop: '12px' }}>
-                      <label>Stock Actual {formData.unidad_medida !== 'UNIDAD' ? `(${formData.unidad_medida.toLowerCase()})` : ''} *</label>
-                      <input
-                        type="number" step="0.001" min="0"
-                        value={formData.stock}
-                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                        required
-                      />
-                    </div>
-                  )}
-
-                  {/* Con variantes selector de tallas */}
-                  {tieneVariantes && (
-                    <div className="tallas-selector">
-                      <p className="tallas-instruccion">
-                        Selecciona las tallas disponibles, e ingresá el stock y el precio de cada una
-                        (cada talla puede venderse a un precio distinto):
-                      </p>
-                      <div className="tallas-grid">
-                        {tallasDisponibles.map(talla => {
-                          const seleccionada = !!tallasSeleccionadas[talla];
-                          return (
-                            <div key={talla} className={`talla-item ${seleccionada ? 'seleccionada' : ''}`}>
-                              <button
-                                type="button"
-                                className={`talla-btn ${seleccionada ? 'activa' : ''}`}
-                                onClick={() => handleToggleTalla(talla)}
-                              >
-                                {talla}
-                              </button>
-                              {seleccionada && (
-                                <div className="talla-inputs">
-                                  <div className="talla-input-grupo">
-                                    <span className="talla-input-label">Stock</span>
-                                    <input
-                                      type="number" min="0"
-                                      value={tallasSeleccionadas[talla].stock}
-                                      onChange={(e) => handleTallaStockChange(talla, 'stock', e.target.value)}
-                                      className="talla-input"
-                                    />
-                                  </div>
-                                  <div className="talla-input-grupo">
-                                    <span className="talla-input-label">Mín</span>
-                                    <input
-                                      type="number" min="0"
-                                      value={tallasSeleccionadas[talla].stock_minimo}
-                                      onChange={(e) => handleTallaStockChange(talla, 'stock_minimo', e.target.value)}
-                                      className="talla-input"
-                                    />
-                                  </div>
-                                  <div className="talla-input-grupo">
-                                    <span className="talla-input-label">Precio *</span>
-                                    <input
-                                      type="number" min="0.01" step="0.01"
-                                      placeholder="0.00"
-                                      value={tallasSeleccionadas[talla].precio}
-                                      onChange={(e) => handleTallaStockChange(talla, 'precio', e.target.value)}
-                                      className="talla-input"
-                                      required
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {Object.keys(tallasSeleccionadas).length > 0 && (
-                        <div className="tallas-resumen">
-                          <span>Stock total:</span>
-                          <strong>{stockTotalVariantes} unidades</strong>
-                          <span className="tallas-resumen-detalle">
-                            ({Object.keys(tallasSeleccionadas).length} talla{Object.keys(tallasSeleccionadas).length !== 1 ? 's' : ''}: {Object.keys(tallasSeleccionadas).join(', ')})
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* Categoría sin tallas (Accesorios, Ofertas) stock único */
-                <div className="form-group">
-                  {formData.lleva_vencimiento && productoEditando ? (
-                    <>
-                      <label>Stock Actual {formData.unidad_medida !== 'UNIDAD' ? `(${formData.unidad_medida.toLowerCase()})` : ''}</label>
-                      <input type="number" value={formData.stock} disabled className="input-solo-lectura" />
-                      <small className="form-hint">
-                        Este producto controla vencimiento — el stock se calcula solo, según los lotes activos.
-                        Para sumar más, recibí una compra en Proveedores (con su fecha de vencimiento).
-                      </small>
-                    </>
-                  ) : formData.lleva_vencimiento && !productoEditando ? (
-                    <>
-                      <label>Stock Inicial {formData.unidad_medida !== 'UNIDAD' ? `(${formData.unidad_medida.toLowerCase()})` : ''}</label>
-                      <input
-                        type="number" step="0.001" min="0"
-                        value={formData.stock}
-                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                      />
-                      <label style={{ marginTop: '10px', display: 'block' }}>
-                        Vencimiento de este stock inicial {parseFloat(formData.stock) > 0 ? '*' : ''}
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.fecha_vencimiento_inicial || ''}
-                        onChange={(e) => setFormData({ ...formData, fecha_vencimiento_inicial: e.target.value })}
-                        required={parseFloat(formData.stock) > 0}
-                      />
-                      <label style={{ marginTop: '10px', display: 'block' }}>Código de lote (opcional)</label>
-                      <input
-                        type="text"
-                        value={formData.numero_lote_inicial || ''}
-                        onChange={(e) => setFormData({ ...formData, numero_lote_inicial: e.target.value })}
-                        placeholder="Ej: L-2508A"
-                      />
-                      <small className="form-hint">
-                        Este stock inicial se va a convertir en el primer lote. Si no tenés stock todavía, dejalo en 0 —
-                        vas a poder agregarlo después, con su fecha, al recibir una compra.
-                      </small>
-                    </>
-                  ) : (
-                    <>
-                      <label>Stock Actual {formData.unidad_medida !== 'UNIDAD' ? `(${formData.unidad_medida.toLowerCase()})` : ''} *</label>
-                      <input
-                        type="number" step="0.001" min="0"
-                        value={formData.stock}
-                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                        required
-                      />
-                      <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
-                         Descuento automático al escanear este producto (0-100%)
-                      </small>
-                    </>
-                  )}
-                </div>
-              )}
+              {/* Stock (según si lleva vencimiento o no) */}
+              <div className="form-group">
+                {formData.lleva_vencimiento && productoEditando ? (
+                  <>
+                    <label>Stock Actual {formData.unidad_medida !== 'UNIDAD' ? `(${formData.unidad_medida.toLowerCase()})` : ''}</label>
+                    <input type="number" value={formData.stock} disabled className="input-solo-lectura" />
+                    <small className="form-hint">
+                      Este producto controla vencimiento — el stock se calcula solo, según los lotes activos.
+                      Para sumar más, recibí una compra en Proveedores (con su fecha de vencimiento).
+                    </small>
+                  </>
+                ) : formData.lleva_vencimiento && !productoEditando ? (
+                  <>
+                    <label>Stock Inicial {formData.unidad_medida !== 'UNIDAD' ? `(${formData.unidad_medida.toLowerCase()})` : ''}</label>
+                    <input
+                      type="number" step="0.001" min="0"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    />
+                    <label style={{ marginTop: '10px', display: 'block' }}>
+                      Vencimiento de este stock inicial {parseFloat(formData.stock) > 0 ? '*' : ''}
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.fecha_vencimiento_inicial || ''}
+                      onChange={(e) => setFormData({ ...formData, fecha_vencimiento_inicial: e.target.value })}
+                      required={parseFloat(formData.stock) > 0}
+                    />
+                    <label style={{ marginTop: '10px', display: 'block' }}>Código de lote (opcional)</label>
+                    <input
+                      type="text"
+                      value={formData.numero_lote_inicial || ''}
+                      onChange={(e) => setFormData({ ...formData, numero_lote_inicial: e.target.value })}
+                      placeholder="Ej: L-2508A"
+                    />
+                    <small className="form-hint">
+                      Este stock inicial se va a convertir en el primer lote. Si no tenés stock todavía, dejalo en 0 —
+                      vas a poder agregarlo después, con su fecha, al recibir una compra.
+                    </small>
+                  </>
+                ) : (
+                  <>
+                    <label>Stock Actual {formData.unidad_medida !== 'UNIDAD' ? `(${formData.unidad_medida.toLowerCase()})` : ''} *</label>
+                    <input
+                      type="number" step="0.001" min="0"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                      required
+                    />
+                    <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                      Descuento automático al escanear este producto (0-100%)
+                    </small>
+                  </>
+                )}
+              </div>
 
               <div className="form-actions">
                 <button type="button" onClick={cerrarModal} className="btn-cancelar">
@@ -1038,11 +816,11 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                         <td>{lote.fecha_vencimiento}</td>
                         <td>
                           {dias < 0
-                            ? ` Vencido hace ${Math.abs(dias)} día(s)`
+                            ? `Vencido hace ${Math.abs(dias)} día(s)`
                             : dias === 0
-                              ? ' Vence hoy'
+                              ? 'Vence hoy'
                               : dias <= 3
-                                ? ` Vende primero — ${dias} día(s)`
+                                ? `Vende primero — ${dias} día(s)`
                                 : `${dias} día(s)`}
                         </td>
                       </tr>
@@ -1052,7 +830,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
               </table>
             )}
             <p className="lotes-hint">
-               Los lotes ya están ordenados del que vence antes al que vence después — al vender,
+              Los lotes ya están ordenados del que vence antes al que vence después — al vender,
               el sistema descuenta siempre del primero de esta lista.
             </p>
           </div>

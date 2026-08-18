@@ -110,8 +110,8 @@ function Sidebar({
           </div>
           {!colapsado && (
             <div className="logo-text">
-              <h2>Lubricentro</h2>
-              <p>POS</p>
+              <h2>M. Beltrán</h2>
+              <p>Lubricentro</p>
             </div>
           )}
         </div>

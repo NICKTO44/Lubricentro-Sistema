@@ -5,12 +5,13 @@
 .sidebar {
   width: 280px;
   height: 100vh;
-  background: linear-gradient(180deg, #0F1620 0%, #1E2A38 100%);
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
   position: relative;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  border-right: 1px solid #E3E7EC;
+  box-shadow: 1px 0 3px rgba(28, 33, 38, 0.04);
   z-index: 1000;
 }
 
@@ -27,7 +28,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #E3E7EC;
 }
 
 .sidebar-logo {
@@ -39,17 +40,24 @@
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #4A6FA5 0%, #1E2A38 100%);
+  background: linear-gradient(135deg, #5B8C7B 0%, #4A7264 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.logo-icon-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .logo-text h2 {
-  color: white;
+  color: #1C2126;
   font-size: 18px;
   font-weight: 600;
   margin: 0;
@@ -57,7 +65,7 @@
 }
 
 .logo-text p {
-  color: rgba(255, 255, 255, 0.6);
+  color: #8A8F98;
   font-size: 12px;
   margin: 2px 0 0 0;
 }
@@ -65,10 +73,10 @@
 .btn-toggle-sidebar {
   width: 32px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #E9ECF1;
   border: none;
   border-radius: 8px;
-  color: white;
+  color: #1C2126;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -78,12 +86,18 @@
 }
 
 .btn-toggle-sidebar:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #DDE2E8;
   transform: scale(1.1);
 }
 
 .sidebar.colapsado .btn-toggle-sidebar {
   margin: 0 auto;
+}
+
+.sidebar.colapsado .sidebar-header {
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 8px;
 }
 
 /* ================================
@@ -106,7 +120,7 @@
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: #E3E7EC;
   border-radius: 3px;
 }
 
@@ -116,11 +130,11 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   background: transparent;
   border: none;
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  color: #6B7178;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
@@ -133,9 +147,9 @@
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  transform: translateX(4px);
+  background: #F2F4F6;
+  color: #1C2126;
+  transform: none;
 }
 
 .sidebar.colapsado .nav-item:hover {
@@ -143,13 +157,13 @@
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #4A6FA5 0%, #3B5A87 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(74, 111, 165, 0.35);
+  background: #E7EFEC;
+  color: #4A7264;
+  box-shadow: none;
 }
 
 .nav-item.active:hover {
-  transform: translateX(0);
+  transform: none;
 }
 
 .nav-icon {
@@ -159,7 +173,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: inherit;
 }
 
 .nav-text {
@@ -186,7 +200,7 @@
   right: 12px;
   width: 4px;
   height: 24px;
-  background: white;
+  background: #5B8C7B;
   border-radius: 2px;
 }
 
@@ -196,16 +210,16 @@
 
 .sidebar-footer {
   padding: 16px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #E3E7EC;
 }
 
 .btn-cerrar-sesion {
   width: 100%;
   padding: 12px;
-  background: rgba(255, 107, 107, 0.15);
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 10px;
-  color: #ff6b6b;
+  background: #FDECEC;
+  border: 1px solid #F7CFCF;
+  border-radius: 999px;
+  color: #C6403A;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -222,10 +236,8 @@
 }
 
 .btn-cerrar-sesion:hover {
-  background: rgba(255, 107, 107, 0.25);
-  border-color: rgba(255, 107, 107, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  background: #FBDADA;
+  border-color: #F3B8B8;
 }
 
 /* ================================

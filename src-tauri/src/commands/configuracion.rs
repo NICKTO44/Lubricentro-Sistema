@@ -97,7 +97,7 @@ pub fn establecer_modo_negocio(
 ) -> Result<String, String> {
     let conn = db.get_conn();
     conn.execute(
-        "UPDATE configuracion_tienda SET modo_negocio = ?, modo_negocio_configurado = 1 WHERE id = 1",
+        "UPDATE configuracion_tienda SET modo_negocio = ?, modo_negocio_configurado = 1",
         params![&modo_negocio],
     )
     .map_err(|e| format!("Error al establecer modo de negocio: {}", e))?;
@@ -171,7 +171,6 @@ pub fn actualizar_configuracion_tienda(
             impresora_ip = ?,
             impresora_tipo = ?,
             impresora_puerto = ?
-        WHERE id = 1
     ";
 
     conn.execute(
@@ -210,7 +209,7 @@ pub fn guardar_token_nubefact(
     let ruta_valor: Option<&str> = if ruta_limpia.is_empty() { None } else { Some(ruta_limpia) };
 
     conn.execute(
-        "UPDATE configuracion_tienda SET nubefact_token = ?, nubefact_ruta = ? WHERE id = 1",
+        "UPDATE configuracion_tienda SET nubefact_token = ?, nubefact_ruta = ?",
         params![token_valor, ruta_valor],
     )
     .map_err(|e| format!("Error al guardar los datos: {}", e))?;

@@ -9,14 +9,15 @@
 }
 
 :root {
-  --primary: #1E2A38;
-  --primary-dark: #121A24;
-  --secondary: #3C5068;
-  --accent: #4A6FA5;
-  --accent-hover: #3B5A87;
+  --primary: #0C172C;
+  --primary-dark: #000512;
+  --secondary: #2C3E5A;
+  --accent: #E4433D;
+  --accent-hover: #C93530;
+  --gold: #F5B301;
   --background: #EEF1F4;
   --card-bg: #ffffff;
-  --text-primary: #1E2A38;
+  --text-primary: #0C172C;
   --text-secondary: #64748B;
   --border: #CBD3DA;
   --success: #2E7D52;
@@ -211,7 +212,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #4A6FA5 0%, #1E2A38 100%);
+  background: linear-gradient(135deg, #E4433D 0%, #0C172C 100%);
   display: flex;
   justify-content: center;
   align-items: center;

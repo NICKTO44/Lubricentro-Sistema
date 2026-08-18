@@ -51,7 +51,8 @@ pub use configuracion::{
     establecer_modo_negocio,
     guardar_token_nubefact,
 };
-pub use facturacion::{emitir_comprobante_electronico, obtener_comprobantes_de_venta, abrir_url_externa, descargar_pdf_comprobante}; // 🆕
+// DESPUÉS
+pub use facturacion::{emitir_comprobante_electronico, obtener_comprobantes_de_venta, abrir_url_externa, descargar_pdf_comprobante, probar_credenciales_nubefact}; // 🆕
 pub use lotes::{agregar_lote_producto, obtener_lotes_de_producto, obtener_lotes_por_vencer, descartar_lote}; // 🆕
 pub use devoluciones::{
     buscar_venta_para_devolucion,

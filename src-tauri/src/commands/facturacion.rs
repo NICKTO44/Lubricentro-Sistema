@@ -318,3 +318,108 @@ pub fn obtener_comprobantes_de_venta(
 
     Ok(iter.filter_map(|r| r.ok()).collect())
 }
+
+// =====================================================
+// COMANDO: Probar credenciales de NubeFacT sin emitir nada
+// ⚠️ Igual que el resto de este archivo: la interpretación de la respuesta
+// de NubeFacT (qué cuenta como "token inválido") está armada según su
+// documentación pública, pero no fue probada todavía contra una cuenta
+// real — pruébala con tu cuenta Demo y avisa si el mensaje no calza con
+// lo que de verdad responde NubeFacT.
+// =====================================================
+#[derive(Debug, Serialize)]
+pub struct PruebaCredencialesResultado {
+    pub success: bool,
+    pub mensaje: String,
+}
+
+#[tauri::command]
+pub fn probar_credenciales_nubefact(token: String, ruta: String) -> Result<PruebaCredencialesResultado, String> {
+    let token = token.trim().to_string();
+    let ruta = ruta.trim().to_string();
+
+    if token.is_empty() || ruta.is_empty() {
+        return Ok(PruebaCredencialesResultado {
+            success: false,
+            mensaje: "Completa la ruta y el token antes de probar la conexión.".to_string(),
+        });
+    }
+    if !(ruta.starts_with("http://") || ruta.starts_with("https://")) {
+        return Ok(PruebaCredencialesResultado {
+            success: false,
+            mensaje: "La ruta debe empezar con http:// o https://".to_string(),
+        });
+    }
+
+    // Consulta liviana que no crea ningún comprobante real: pregunta por un
+    // comprobante que probablemente no existe.
+    let payload = serde_json::json!({
+        "operacion": "consultar_comprobante",
+        "tipo_de_comprobante": 2,
+        "serie": "BBB1",
+        "numero": 1,
+    });
+
+    let client = reqwest::blocking::Client::new();
+    let respuesta = client
+        .post(&ruta)
+        .header("Authorization", format!("Token token=\"{}\"", token))
+        .header("Content-Type", "application/json")
+        .json(&payload)
+        .send();
+
+    match respuesta {
+        Ok(resp) => {
+            let status = resp.status();
+
+            if status == reqwest::StatusCode::UNAUTHORIZED || status == reqwest::StatusCode::FORBIDDEN {
+                return Ok(PruebaCredencialesResultado {
+                    success: false,
+                    mensaje: "NubeFacT rechazó el token para esa ruta (no autorizado). Revisa que los copiaste bien.".to_string(),
+                });
+            }
+
+            // 🔒 FIX: antes, si la respuesta no era JSON (ej: una página web
+            // cualquiera), el .unwrap_or(json!({})) lo trataba como "sin errores"
+            // y daba un falso "conexión exitosa". Ahora, si no es JSON válido,
+            // es directamente un fallo — esa ruta no es una API de NubeFacT.
+            let cuerpo_texto = resp.text().unwrap_or_default();
+            let cuerpo: Result<serde_json::Value, _> = serde_json::from_str(&cuerpo_texto);
+
+            match cuerpo {
+                Ok(json) => {
+                    let error_texto = json.get("errors").and_then(|v| v.as_str()).unwrap_or("").to_lowercase();
+                    if !error_texto.is_empty() {
+                        if error_texto.contains("token") || error_texto.contains("autent") || error_texto.contains("autoriz") {
+                            return Ok(PruebaCredencialesResultado {
+                                success: false,
+                                mensaje: format!("NubeFacT rechazó las credenciales: {}", error_texto),
+                            });
+                        }
+                        // Hay un campo "errors" pero no menciona token/autenticación —
+                        // probablemente el documento de prueba "no existe", lo cual es
+                        // normal y confirma que el token SÍ fue aceptado.
+                    }
+                    if !status.is_success() && error_texto.is_empty() {
+                        return Ok(PruebaCredencialesResultado {
+                            success: false,
+                            mensaje: format!("La ruta respondió con un error (código {}). Revisa que sea la ruta correcta de tu cuenta NubeFacT.", status),
+                        });
+                    }
+                    Ok(PruebaCredencialesResultado {
+                        success: true,
+                        mensaje: "Conexión exitosa — la ruta y el token son válidos.".to_string(),
+                    })
+                }
+                Err(_) => Ok(PruebaCredencialesResultado {
+                    success: false,
+                    mensaje: "Esa ruta no respondió con datos de NubeFacT (no es una respuesta JSON válida). Revisa que sea la URL exacta que te dio NubeFacT en 'Api (Integración)'.".to_string(),
+                }),
+            }
+        }
+        Err(e) => Ok(PruebaCredencialesResultado {
+            success: false,
+            mensaje: format!("No se pudo conectar a esa ruta: {}", e),
+        }),
+    }
+}

@@ -79,6 +79,7 @@ fn main() {
             obtener_configuracion_tienda,
             actualizar_configuracion_tienda,
             guardar_token_nubefact,
+            probar_credenciales_nubefact,
             emitir_comprobante_electronico,
             obtener_comprobantes_de_venta,
             abrir_url_externa,

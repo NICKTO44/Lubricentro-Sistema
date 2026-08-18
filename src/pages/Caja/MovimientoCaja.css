@@ -98,14 +98,14 @@
 }
 
 .btn-ejemplo:hover {
-  background: #4A6FA5;
+  background: #E4433D;
   color: white;
-  border-color: #4A6FA5;
+  border-color: #E4433D;
 }
 
 .info-movimiento {
   background: #f8f9fa;
-  border-left: 4px solid #4A6FA5;
+  border-left: 4px solid #E4433D;
   border-radius: 8px;
   padding: 15px;
   display: flex;
