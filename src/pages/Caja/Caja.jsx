@@ -516,12 +516,12 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                         <td>{formatearMoneda(item.ventas_efectivo)}</td>
                         <td>{formatearMoneda(item.ventas_tarjeta)}</td>
                         <td>{formatearMoneda(item.ventas_transferencia)}</td>
-                        <td>
-                          {item.llego_tarde
-                            ? <span className="badge-tarde"> {item.minutos_retraso}min</span>
-                            : <span className="badge-puntual">Puntual</span>
-                          }
-                        </td>
+                      <td>
+                        {item.llego_tarde
+                          ? <span className="badge-tarde"> {formatearDuracion(item.minutos_retraso)}</span>
+                          : <span className="badge-puntual">Puntual</span>
+                        }
+                      </td>
                         <td>
                           {badge
                             ? <span className={badge.clase}>{badge.texto}</span>

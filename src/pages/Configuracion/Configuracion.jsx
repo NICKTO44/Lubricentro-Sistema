@@ -165,10 +165,21 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
     }
   };
 
+  // 🩹 FIX: antes llamaba a invoke('probar_impresora') sin mandar nada —
+  // el comando de Rust leía la IP directo de la base de datos, así que si
+  // el "Guardar" nunca se había completado con éxito (o el campo se llenó
+  // por autocompletado del navegador sin disparar onChange), la prueba
+  // fallaba con "No hay IP configurada" aunque el campo se viera lleno en
+  // pantalla. Ahora se manda explícitamente lo que está en el formulario
+  // en este momento, sin depender de que ya esté guardado.
   const probarImpresora = async () => {
     setProbandoImpresora(true);
     try {
-      await invoke('probar_impresora');
+      await invoke('probar_impresora', {
+        impresoraIp: configTienda.impresora_ip,
+        impresoraPuerto: parseInt(configTienda.impresora_puerto) || 9100,
+        impresoraTipo: configTienda.impresora_tipo,
+      });
       mostrarMensaje('success', 'Prueba enviada correctamente');
     } catch (error) {
       mostrarMensaje('error', 'Error: ' + error);

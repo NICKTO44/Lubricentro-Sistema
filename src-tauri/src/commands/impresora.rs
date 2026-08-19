@@ -59,10 +59,18 @@ fn enviar_lento(stream: &mut TcpStream, texto: &str, es_matricial: bool) -> Resu
     stream.flush().ok();
     thread::sleep(Duration::from_millis(200));
 
-    stream.write_all(&[0x1B, 0x74, 0x10])
-        .map_err(|e| format!("Error charset: {}", e))?;
-    stream.flush().ok();
-    thread::sleep(Duration::from_millis(100));
+    // 🩹 FIX: el comando "Select character code table" (ESC t 16) es propio
+    // de impresoras térmicas modernas. Las matriciales viejas (como la
+    // TM-U220A, firmware 5.12) no lo soportan — al recibirlo, quedan en un
+    // estado donde interpretan el texto siguiente como datos gráficos en
+    // vez de caracteres, imprimiendo líneas de ruido repetidas en vez de
+    // texto legible. Se omite por completo para matriciales.
+    if !es_matricial {
+        stream.write_all(&[0x1B, 0x74, 0x10])
+            .map_err(|e| format!("Error charset: {}", e))?;
+        stream.flush().ok();
+        thread::sleep(Duration::from_millis(100));
+    }
 
     let delay = if es_matricial { 80 } else { 20 };
 
@@ -179,11 +187,34 @@ pub fn imprimir_boleta(
     Ok("Boleta impresa correctamente".to_string())
 }
 
+// 🩹 FIX: antes este comando no recibía ningún parámetro — leía siempre
+// impresora_ip/tipo/puerto directo de la base de datos. Si el usuario
+// tenía la IP escrita en el formulario pero el "Guardar" nunca se había
+// completado con éxito (o el valor quedó puesto por autocompletado del
+// navegador sin disparar el onChange de React), "Probar Impresora" fallaba
+// con "No hay IP configurada" aunque el campo se viera lleno en pantalla —
+// porque estaba mirando la base de datos, no el formulario actual.
+//
+// Ahora el comando acepta los 3 datos como parámetros opcionales: si el
+// frontend los manda (formulario actual), se usan esos. Si no los manda
+// (compatibilidad con cualquier otro lugar que siga llamando sin args),
+// cae de vuelta a lo que ya esté guardado en la base de datos.
 #[tauri::command]
 pub fn probar_impresora(
     db: tauri::State<DatabasePool>,
+    impresora_ip: Option<String>,
+    impresora_puerto: Option<i32>,
+    impresora_tipo: Option<String>,
 ) -> Result<String, String> {
-    let (ip, tipo, puerto) = obtener_config_impresora(&db);
+    let (ip_bd, tipo_bd, puerto_bd) = obtener_config_impresora(&db);
+
+    let ip = impresora_ip
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or(ip_bd);
+    let puerto = impresora_puerto.unwrap_or(puerto_bd);
+    let tipo = impresora_tipo
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or(tipo_bd);
 
     if ip.is_empty() {
         return Err("No hay IP de impresora configurada.".to_string());

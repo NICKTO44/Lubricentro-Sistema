@@ -6,18 +6,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
 
 :root {
-  --bg:          #E7EFEA;
+  --bg:          #F6F7F9;
   --surface:     #ffffff;
-  --border:      #E3E7EC;
-  --accent:      #5B8C7B;
-  --accent-soft: #4A7264;
-  --accent-tint: #E7EFEC;
+  --border:      #E5E7EB;
+  --navy:        #102341;
+  --navy-light:  #1C3358;
+  --accent:      #F5691F;
+  --accent-soft: #DC5A16;
+  --accent-tint: #FDEEE3;
   --danger:      #dc2626;
-  --success:     #3D8F6D;
+  --success:     #16a34a;
   --warning:     #d97706;
-  --muted:       #8A8F98;
-  --text:        #1C2126;
-  --text-light:  #4B5158;
+  --muted:       #6B7280;
+  --text:        #102341;
+  --text-light:  #4B5563;
 
   /* stock — color de tarjeta completa */
   --card-low-bg:      #fff5f5;
@@ -364,7 +366,7 @@ body {
   font-family: 'Sora', sans-serif;
   font-size: 15.5px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--accent);
   margin-top: 1px;
 }
 
@@ -687,7 +689,7 @@ body {
   padding-top: 12px;
   border-top: 1.5px dashed var(--border);
 }
-.total-final span:last-child { color: var(--text) !important; }
+.total-final span:last-child { color: var(--accent) !important; }
 
 /* =====================================================
    MÉTODO DE PAGO
@@ -730,9 +732,9 @@ body {
   color: var(--text);
 }
 .metodos button.active {
-  background: var(--accent-tint);
-  color: var(--accent-soft);
-  border-color: var(--accent);
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
 }
 .metodos button:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -1161,7 +1163,7 @@ body {
 }
 
 .comprobante-opcion:hover { border-color: #86efac; }
-.comprobante-opcion.activa { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
+.comprobante-opcion.activa { border-color: var(--accent); background: var(--accent); color: #fff; }
 .comprobante-opcion:disabled {
   cursor: not-allowed;
   opacity: 0.45;
