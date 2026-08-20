@@ -475,6 +475,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                 <th>Producto</th>
                 <th>Categoría</th>
                 <th>Precio</th>
+                <th>Precio Compra</th>
                 <th>Stock</th>
                 <th>Stock Mín</th>
                 <th>Estado</th>
@@ -514,6 +515,11 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                     </td>
                     <td>{producto.categoria_nombre || 'Sin categoría'}</td>
                     <td className="precio-col">S/ {producto.precio.toFixed(2)}</td>
+                    <td className="precio-compra-col">
+                      {producto.precio_compra > 0
+                        ? `S/ ${producto.precio_compra.toFixed(2)}`
+                        : <span className="precio-compra-vacio">—</span>}
+                    </td>
                     <td className="stock-col">
                       <span className={producto.stock <= producto.stock_minimo ? 'stock-bajo' : 'stock-ok'}>
                         {formatearStock(producto.stock, producto.unidad_medida)}
