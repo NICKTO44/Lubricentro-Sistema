@@ -18,7 +18,8 @@ pub fn obtener_productos(db: tauri::State<'_, DatabasePool>) -> ProductosRespons
         SELECT 
             p.id, p.codigo, p.nombre, p.descripcion, p.precio, 
             p.stock, p.stock_minimo, p.unidad_medida, p.categoria_id, c.nombre as categoria_nombre, 
-            p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad
+            p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad,
+            p.precio_compra
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE p.activo = 1
@@ -48,6 +49,7 @@ pub fn obtener_productos(db: tauri::State<'_, DatabasePool>) -> ProductosRespons
             imagen_url: row.get(13)?,
             lleva_vencimiento: row.get::<_, i32>(14)? == 1,
             viscosidad: row.get(15)?,
+            precio_compra: row.get(16)?,
         })
     });
 
@@ -74,7 +76,8 @@ pub fn buscar_producto_por_codigo(
         SELECT 
             p.id, p.codigo, p.nombre, p.descripcion, p.precio, 
             p.stock, p.stock_minimo, p.unidad_medida, p.categoria_id, c.nombre as categoria_nombre, 
-            p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad
+            p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad,
+            p.precio_compra
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE p.codigo = ? AND p.activo = 1
@@ -107,6 +110,7 @@ pub fn buscar_producto_por_codigo(
             imagen_url: row.get(13)?,
             lleva_vencimiento: row.get::<_, i32>(14)? == 1,
             viscosidad: row.get(15)?,
+            precio_compra: row.get(16)?,
         })
     }).optional();
 
@@ -145,8 +149,8 @@ pub fn agregar_producto(
     let stock_inicial = if tiene_variantes { 0.0 } else { producto.stock };
 
     let query = r"
-        INSERT INTO productos (codigo, nombre, descripcion, precio, stock, stock_minimo, unidad_medida, categoria_id, descuento_porcentaje, tiene_variantes, imagen_url, lleva_vencimiento, viscosidad)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO productos (codigo, nombre, descripcion, precio, stock, stock_minimo, unidad_medida, categoria_id, descuento_porcentaje, tiene_variantes, imagen_url, lleva_vencimiento, viscosidad, precio_compra)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ";
 
     let result = conn.execute(
@@ -165,6 +169,7 @@ pub fn agregar_producto(
             &producto.imagen_url,
             if producto.lleva_vencimiento { 1 } else { 0 },
             &producto.viscosidad,
+            producto.precio_compra.unwrap_or(0.0),
         ],
     );
 
@@ -316,6 +321,7 @@ pub fn actualizar_producto(
     imagen_url: Option<String>,
     lleva_vencimiento: Option<bool>, // 🆕
     viscosidad: Option<String>,
+    precio_compra: Option<f64>, // 🆕 editable a mano desde Inventario
 ) -> ProductoResponse {
     let conn = db.get_conn();
 
@@ -338,7 +344,7 @@ pub fn actualizar_producto(
         SET codigo = ?, nombre = ?, descripcion = ?, precio = ?,
             stock = ?, stock_minimo = ?, unidad_medida = ?, categoria_id = ?,
             descuento_porcentaje = ?, tiene_variantes = ?, imagen_url = ?,
-            lleva_vencimiento = ?, viscosidad = ?,
+            lleva_vencimiento = ?, viscosidad = ?, precio_compra = ?,
             fecha_actualizacion = datetime('now', 'localtime')
         WHERE id = ?
     ";
@@ -353,6 +359,7 @@ pub fn actualizar_producto(
             &imagen_url,
             if lleva_vencimiento.unwrap_or(false) { 1 } else { 0 },
             &viscosidad,
+            precio_compra.unwrap_or(0.0),
             producto_id,
         ],
     );
@@ -426,6 +433,7 @@ pub fn obtener_productos_stock_bajo(db: tauri::State<'_, DatabasePool>) -> Produ
             imagen_url: None,
             lleva_vencimiento: false,
             viscosidad: None,
+            precio_compra: 0.0,
         })
     });
 
@@ -514,7 +522,8 @@ pub fn buscar_productos_filtrado(
         SELECT 
             p.id, p.codigo, p.nombre, p.descripcion, p.precio, 
             p.stock, p.stock_minimo, p.unidad_medida, p.categoria_id, c.nombre as categoria_nombre, 
-            p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad
+            p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad,
+            p.precio_compra
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE p.activo = 1 AND p.stock > 0
@@ -564,7 +573,8 @@ pub fn buscar_productos_filtrado(
                 activo: row.get::<_, i32>(12)? == 1,
                 imagen_url: row.get(13)?,
                 lleva_vencimiento: row.get::<_, i32>(14)? == 1,
-            viscosidad: row.get(15)?,
+                viscosidad: row.get(15)?,
+                precio_compra: row.get(16)?,
             })
         })
         .map_err(|e| format!("Error al ejecutar consulta: {}", e))?;
@@ -621,7 +631,8 @@ pub fn obtener_producto_con_variantes(
     let producto = conn.query_row(
         r"SELECT p.id, p.codigo, p.nombre, p.descripcion, p.precio,
                  p.stock, p.stock_minimo, p.unidad_medida, p.categoria_id, c.nombre,
-                 p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad
+                 p.descuento_porcentaje, p.tiene_variantes, p.activo, p.imagen_url, p.lleva_vencimiento, p.viscosidad,
+                 p.precio_compra
           FROM productos p
           LEFT JOIN categorias c ON c.id = p.categoria_id
           WHERE p.id = ?",
@@ -643,7 +654,8 @@ pub fn obtener_producto_con_variantes(
                 activo: row.get::<_, i32>(12)? == 1,
                 imagen_url: row.get(13)?,
                 lleva_vencimiento: row.get::<_, i32>(14)? == 1,
-            viscosidad: row.get(15)?,
+                viscosidad: row.get(15)?,
+                precio_compra: row.get(16)?,
             })
         },
     )

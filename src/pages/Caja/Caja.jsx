@@ -1,5 +1,6 @@
 // Caja/Caja.jsx
 // Componente principal de gestión de cajas con historial
+// 🆕 Ya no hay turnos ni puntualidad: el negocio trabaja un solo horario.
 
 import { useState, useEffect } from 'react';
 import {
@@ -46,7 +47,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
   const [filtros, setFiltros] = useState({
     fechaInicio: '',
     fechaFin: '',
-    turno: '',
   });
   const [detalleModal, setDetalleModal] = useState(null);
   const [cargandoDetalle, setCargandoDetalle] = useState(false);
@@ -90,7 +90,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
       const data = await obtenerHistorialCajas({
         fechaInicio: f.fechaInicio || null,
         fechaFin: f.fechaFin || null,
-        turno: f.turno || null,
         soloCerradas: true,
       });
       setHistorial(data);
@@ -120,7 +119,7 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
   };
 
   const handleLimpiarFiltros = () => {
-    const filtrosLimpios = { fechaInicio: '', fechaFin: '', turno: '' };
+    const filtrosLimpios = { fechaInicio: '', fechaFin: '' };
     setFiltros(filtrosLimpios);
     cargarHistorial(filtrosLimpios);
   };
@@ -236,10 +235,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
               <p>Ya hay una caja abierta en el sistema</p>
               <div className="info-caja-ocupada">
                 <div className="info-item">
-                  <span className="label">Turno:</span>
-                  <span className="value">{cajaOtraPersona.turno}</span>
-                </div>
-                <div className="info-item">
                   <span className="label">Hora de apertura:</span>
                   <span className="value">{cajaOtraPersona.hora_apertura}</span>
                 </div>
@@ -276,15 +271,8 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
               <div className="caja-info-card">
                 <div className="card-header">
                   <h3>Estado de Caja</h3>
-                  <span className={`badge-estado ${cajaActual.llego_tarde ? 'tarde' : 'puntual'}`}>
-                    {cajaActual.llego_tarde ? ' Llegó tarde' : ' Puntual'}
-                  </span>
                 </div>
                 <div className="info-grid">
-                  <div className="info-item">
-                    <span className="label">Turno:</span>
-                    <span className="value turno">{cajaActual.turno}</span>
-                  </div>
                   <div className="info-item">
                     <span className="label">Apertura:</span>
                     <span className="value">{cajaActual.hora_apertura}</span>
@@ -301,7 +289,7 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
               </div>
 
               <div className="caja-ventas-card">
-                <h3>Ventas del Turno</h3>
+                <h3>Ventas de la Jornada</h3>
                 <div className="ventas-grid">
                   <div className="caja-venta-item efectivo">
                     <div className="venta-icono"><IconCash size={20} stroke={2} /></div>
@@ -443,19 +431,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                 className="filtro-input"
               />
             </div>
-            <div className="filtro-grupo">
-              <label>Turno</label>
-              <select
-                value={filtros.turno}
-                onChange={e => setFiltros(f => ({ ...f, turno: e.target.value }))}
-                className="filtro-input"
-              >
-                <option value="">Todos</option>
-                <option value="MAÑANA">Mañana</option>
-                <option value="TARDE">Tarde</option>
-                <option value="NOCHE">Noche</option>
-              </select>
-            </div>
             <div className="filtro-acciones">
               <button className="btn-buscar" onClick={handleBuscarHistorial}>
                  Buscar
@@ -484,7 +459,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                   <tr>
                     <th>Fecha</th>
                     <th>Cajero</th>
-                    <th>Turno</th>
                     <th>Apertura</th>
                     <th>Cierre</th>
                     <th>Duración</th>
@@ -492,7 +466,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                     <th>Efectivo</th>
                     <th>Yape</th>
                     <th>Transfer.</th>
-                    <th>Puntualidad</th>
                     <th>Cuadre</th>
                     <th></th>
                   </tr>
@@ -504,11 +477,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                       <tr key={item.id} className="historial-fila">
                         <td>{item.fecha_apertura?.split(' ')[0] || '—'}</td>
                         <td className="cajero-nombre">{item.cajero_nombre}</td>
-                        <td>
-                          <span className={`badge-turno ${item.turno?.toLowerCase()}`}>
-                            {item.turno}
-                          </span>
-                        </td>
                         <td>{item.hora_apertura || '—'}</td>
                         <td>{item.hora_cierre || '—'}</td>
                         <td>{formatearDuracion(item.duracion_turno_minutos)}</td>
@@ -516,12 +484,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                         <td>{formatearMoneda(item.ventas_efectivo)}</td>
                         <td>{formatearMoneda(item.ventas_tarjeta)}</td>
                         <td>{formatearMoneda(item.ventas_transferencia)}</td>
-                      <td>
-                        {item.llego_tarde
-                          ? <span className="badge-tarde"> {formatearDuracion(item.minutos_retraso)}</span>
-                          : <span className="badge-puntual">Puntual</span>
-                        }
-                      </td>
                         <td>
                           {badge
                             ? <span className={badge.clase}>{badge.texto}</span>
@@ -598,10 +560,6 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                     <span className="det-value">{detalleModal.cajero_nombre}</span>
                   </div>
                   <div className="detalle-item">
-                    <span className="det-label">Turno</span>
-                    <span className="det-value">{detalleModal.caja.turno}</span>
-                  </div>
-                  <div className="detalle-item">
                     <span className="det-label">Fecha</span>
                     <span className="det-value">{detalleModal.caja.fecha_apertura?.split(' ')[0]}</span>
                   </div>
@@ -617,18 +575,12 @@ function Caja({ usuario, onVolver, modoSoloLectura }) {
                     <span className="det-label">Duración</span>
                     <span className="det-value">{formatearDuracion(detalleModal.caja.duracion_turno_minutos)}</span>
                   </div>
-                  <div className="detalle-item">
-                    <span className="det-label">Puntualidad</span>
-                    <span className="det-value">
-                      {detalleModal.resumen_puntualidad.mensaje}
-                    </span>
-                  </div>
                 </div>
               </div>
 
               {/* Ventas */}
               <div className="detalle-seccion">
-                <h4>Ventas del Turno</h4>
+                <h4>Ventas de la Jornada</h4>
                 <div className="detalle-grid">
                   <div className="detalle-item">
                     <span className="det-label">Efectivo</span>

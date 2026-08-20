@@ -1361,3 +1361,18 @@ body {
   color: #16a34a;
   margin: 2px 0;
 }
+.item-precio-editable {
+  cursor: pointer;
+  border-bottom: 1px dashed #999;
+  display: inline-block;
+}
+.item-precio-editable:hover {
+  border-bottom-color: #333;
+}
+.input-precio-editable {
+  width: 90px;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 2px 6px;
+}

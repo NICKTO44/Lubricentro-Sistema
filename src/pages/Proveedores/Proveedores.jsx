@@ -778,7 +778,7 @@ function ModalNuevaCompra({ proveedores, usuario, onClose, onSuccess, onError })
         _clave: claveUnica, producto_id: prodSelec.id, producto_nombre: prodSelec.nombre,
         variante_id: null, talla: null, cantidad: '',
         unidad_medida: prodSelec.unidad_medida || 'UNIDAD',
-        precio_compra: '', precio_venta_sugerido: prodSelec.precio || 0, subtotal: 0,
+        precio_compra: prodSelec.precio_compra > 0 ? prodSelec.precio_compra : '', precio_venta_sugerido: prodSelec.precio || 0, subtotal: 0,
       }]);
     }
     setProdSelec(null); setBusqProd(''); setTallasMulti({}); setVariantes([]); setDropdownVisible(false);
@@ -1523,7 +1523,7 @@ function ModalDetalleCompra({ compraResumen, usuario, modoSoloLectura, onClose, 
                     <textarea value={notasRecepcion} onChange={e => setNotasRecepcion(e.target.value)}
                       placeholder="Observaciones sobre la mercadería recibida..." rows={2} />
                   </div>
-                  <div className="recibir-aviso">Solo las unidades <strong>conformes</strong> subirán al stock automáticamente.</div>
+                  <div className="recibir-aviso">Solo las unidades <strong>conformes</strong> subirán al stock automáticamente, y el precio de compra del producto en Inventario se actualizará con el precio de esta compra.</div>
                   <button className="btn-confirmar-recepcion" onClick={recibirMercaderia} disabled={procesando}>
                     {procesando ? 'Procesando...' : ' Confirmar Recepción'}
                   </button>
@@ -1773,6 +1773,7 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'LUBRICENTRO', onClose, 
     stock: '0', stock_minimo: '', unidad_medida: 'UNIDAD',
     categoria_id: primeraCat ? primeraCat[0] : '',
     descuento_porcentaje: 0,
+    precio_compra: '', // 🆕 costo del producto — opcional, se puede completar después
   });
   const [tieneVariantes, setTieneVariantes]           = useState(false);
   const [tipoTallaCategoria, setTipoTallaCategoria]   = useState(primeraCat ? primeraCat[2] : 'NINGUNA');
@@ -1841,6 +1842,7 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'LUBRICENTRO', onClose, 
           descuento_porcentaje: 0,
           tiene_variantes: tieneVariantes,
           variantes: variantesArray,
+          precio_compra: parseFloat(formData.precio_compra) || 0, // 🆕
         },
       });
       if (resultado.success) {
@@ -1898,6 +1900,14 @@ function ModalNuevoProducto({ categorias, modoNegocio = 'LUBRICENTRO', onClose, 
                   onChange={e => setFormData(f => ({ ...f, precio: e.target.value }))} placeholder="0.00" />
               </div>
             )}
+            <div className="form-group">
+              <label>Precio de compra S/</label>
+              <input type="number" onFocus={e => e.target.select()} step="0.01" min="0" value={formData.precio_compra}
+                onChange={e => setFormData(f => ({ ...f, precio_compra: e.target.value }))} placeholder="0.00" />
+              <small style={{ color: '#6b7280', fontSize: 11, marginTop: 3, display: 'block' }}>
+                Opcional. Se actualiza solo al recibir esta u otra compra real más adelante.
+              </small>
+            </div>
             <div className="form-group">
               <label>Stock mínimo</label>
               <input type="number" onFocus={e => e.target.select()} step="0.001" min="0" value={formData.stock_minimo}

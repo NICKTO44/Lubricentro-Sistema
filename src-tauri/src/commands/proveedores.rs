@@ -451,6 +451,25 @@ pub fn recibir_mercaderia(
                 folio: None,
             };
         }
+
+        // 🆕 Si algo llegó conforme, Proveedores "manda": el precio de
+        // compra de esta línea reemplaza al que estuviera guardado en el
+        // producto (Inventario). Si el dueño no tocó el precio en esta
+        // compra, no pasa nada — queda igual que antes.
+        if conforme > 0.0 {
+            let datos_item: Option<(i32, f64)> = conn.query_row(
+                "SELECT producto_id, precio_compra FROM detalles_compra WHERE id = ?",
+                params![item.detalle_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            ).optional().unwrap_or(None);
+
+            if let Some((producto_id, precio_compra)) = datos_item {
+                conn.execute(
+                    "UPDATE productos SET precio_compra = ?, fecha_actualizacion = datetime('now', 'localtime') WHERE id = ?",
+                    params![precio_compra, producto_id],
+                ).ok(); // si falla, no interrumpe la recepción de mercadería
+            }
+        }
     }
 
     // Determinar estado: RECIBIDA si todo lo pedido está conforme, PARCIAL si no
@@ -516,7 +535,7 @@ pub fn recibir_mercaderia(
         )
     } else {
         format!(
-            "Mercadería {}. Stock actualizado automáticamente.",
+            "Mercadería {}. Stock y precio de compra actualizados automáticamente.",
             if nuevo_estado == "RECIBIDA" { "recibida completamente" } else { "recibida parcialmente" }
         )
     };

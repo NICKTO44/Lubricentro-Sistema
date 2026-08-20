@@ -24,6 +24,10 @@ pub struct Producto {
     pub imagen_url: Option<String>,  // 🆕 imagen en base64 (data URI), thumbnail comprimido
     pub lleva_vencimiento: bool, // 🆕 solo productos perecibles de minimarket
     pub viscosidad: Option<String>, // Grado SAE (ej. '20W-50'). Solo aplica a aceites/lubricantes.
+    // 🆕 Precio de compra (costo). Se edita a mano desde Inventario, pero
+    // Proveedores "manda": al confirmar la recepción de una compra real,
+    // este valor se sobreescribe con el precio de compra de esa línea.
+    pub precio_compra: f64,
 }
 
 // =====================================================
@@ -74,6 +78,10 @@ pub struct ProductoNuevo {
     pub lleva_vencimiento: bool,
     #[serde(default)] // Grado SAE (ej. '20W-50'). Opcional, solo aplica a aceites/lubricantes.
     pub viscosidad: Option<String>,
+    // 🆕 Precio de compra inicial (costo) — opcional; si no se manda, queda en 0
+    // hasta que se registre una compra real o se edite a mano desde Inventario.
+    #[serde(default)]
+    pub precio_compra: Option<f64>,
 }
 
 fn default_unidad_medida() -> String {

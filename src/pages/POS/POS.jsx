@@ -35,6 +35,10 @@ function POS({ usuario, onVolver, modoSoloLectura }) {
   // modalCantidadPeso = { producto }
   const [inputCantidadPeso, setInputCantidadPeso] = useState('');
 
+  // 🆕 Edición manual del precio de un item ya en el carrito (no toca el precio del catálogo)
+  const [editandoPrecioClave, setEditandoPrecioClave] = useState(null);
+  const [inputPrecioEditado, setInputPrecioEditado] = useState('');
+
   useEffect(() => {
     cargarProductos();
     cargarCategorias();
@@ -309,10 +313,14 @@ const getStockTexto = (stock, unidadMedida) => {
           codigo: producto.codigo,
           nombre: producto.nombre,
           precio: precioAUsar,
+          // 🆕 Precio de catálogo al momento de agregar — solo referencia interna,
+          // nunca se muestra ni se usa para el cálculo; el catálogo real vive en `productos`.
+          precio_original: precioAUsar,
           cantidad: cantidadInicial,
           stock: stockReal,
           unidad_medida: producto.unidad_medida || 'UNIDAD',
-          descuento_porcentaje: producto.descuento_porcentaje || 0,
+          // 🆕 Descuento por línea en SOLES directos (ya no porcentaje)
+          descuento_monto: 0,
         }]);
         return true;
       } else {
@@ -338,26 +346,66 @@ const getStockTexto = (stock, unidadMedida) => {
   const eliminarDelCarrito = (claveCarrito) => {
     if (modoSoloLectura) return;
     setCarrito(carrito.filter(item => item.claveCarrito !== claveCarrito));
+    if (editandoPrecioClave === claveCarrito) {
+      setEditandoPrecioClave(null);
+      setInputPrecioEditado('');
+    }
   };
 
-  const aplicarDescuento = (claveCarrito, descuento) => {
+  // 🆕 Edición manual del precio de un item ya agregado al carrito.
+  // Solo cambia item.precio en el estado del carrito — no toca `productos`
+  // ni llama a ningún comando de Rust, así que el precio del catálogo
+  // (SQLite) queda exactamente igual después de la venta.
+  const iniciarEdicionPrecio = (item) => {
     if (modoSoloLectura) return;
-    const d = Math.min(Math.max(descuento, 0), 100);
+    setEditandoPrecioClave(item.claveCarrito);
+    setInputPrecioEditado(item.precio.toString());
+  };
+
+  const cancelarEdicionPrecio = () => {
+    setEditandoPrecioClave(null);
+    setInputPrecioEditado('');
+  };
+
+  const confirmarEdicionPrecio = (claveCarrito) => {
+    // Si ya se cerró por otro evento (ej. blur tras Enter), no hacer nada
+    if (editandoPrecioClave !== claveCarrito) return;
+
+    const nuevoPrecio = parseFloat(inputPrecioEditado);
+    if (!nuevoPrecio || nuevoPrecio <= 0) {
+      mostrarMensaje('error', 'Precio inválido');
+      setEditandoPrecioClave(null);
+      setInputPrecioEditado('');
+      return;
+    }
+
     setCarrito(carrito.map(item =>
-      item.claveCarrito === claveCarrito ? { ...item, descuento_porcentaje: d } : item
+      item.claveCarrito === claveCarrito ? { ...item, precio: nuevoPrecio } : item
     ));
+    setEditandoPrecioClave(null);
+    setInputPrecioEditado('');
+  };
+
+  // 🆕 Descuento por línea en soles directos. Se limita entre 0 y el
+  // subtotal de esa línea (precio × cantidad) para nunca dejar un
+  // subtotal negativo.
+  const aplicarDescuento = (claveCarrito, monto) => {
+    if (modoSoloLectura) return;
+    setCarrito(carrito.map(item => {
+      if (item.claveCarrito !== claveCarrito) return item;
+      const subtotalItem = item.precio * item.cantidad;
+      const d = Math.min(Math.max(monto, 0), subtotalItem);
+      return { ...item, descuento_monto: d };
+    }));
   };
 
   const calcularSubtotalItem = (item) => {
     const sub = item.precio * item.cantidad;
-    return sub - sub * ((item.descuento_porcentaje || 0) / 100);
+    return sub - (item.descuento_monto || 0);
   };
 
   const calcularSubtotal    = () => carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
-  const calcularDescuentoTotal = () => carrito.reduce((s, i) => {
-    const sub = i.precio * i.cantidad;
-    return s + sub * ((i.descuento_porcentaje || 0) / 100);
-  }, 0);
+  const calcularDescuentoTotal = () => carrito.reduce((s, i) => s + (i.descuento_monto || 0), 0);
   const calcularTotal = () => carrito.reduce((s, i) => s + calcularSubtotalItem(i), 0);
   const calcularCambio = () => {
     if (metodoPago !== 'EFECTIVO') return 0;
@@ -373,14 +421,14 @@ const getStockTexto = (stock, unidadMedida) => {
 
     setProcesando(true);
     try {
-      // 🆕 Incluir variante_id y talla en cada producto
+      // 🆕 Incluir variante_id y talla en cada producto, y el descuento en soles
       const productosVenta = carrito.map(item => ({
         id: item.id,
         nombre: item.nombre,
         codigo: item.codigo,
         precio: item.precio,
         cantidad: item.cantidad,
-        descuentoPorcentaje: item.descuento_porcentaje || 0,
+        descuentoMonto: item.descuento_monto || 0,
         varianteId: item.variante_id || null,
         talla: item.talla || null,
       }));
@@ -408,7 +456,7 @@ const getStockTexto = (stock, unidadMedida) => {
           cantidad: item.cantidad,
           unidad_medida: item.unidad_medida || 'UNIDAD',
           precio: item.precio,
-          descuento: item.descuento_porcentaje || 0,
+          descuento: item.descuento_monto || 0,
         })),
       };
 
@@ -591,7 +639,34 @@ const getStockTexto = (stock, unidadMedida) => {
                           <span className="item-talla-badge">Talla {item.talla}</span>
                         )}
                       </div>
-                      <div className="item-precio">S/ {item.precio.toFixed(2)}</div>
+
+                      {/* 🆕 Precio editable: clic para cambiar el precio de venta de este item.
+                          Solo afecta esta venta — el precio del catálogo no se modifica. */}
+                      {editandoPrecioClave === item.claveCarrito ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          autoFocus
+                          value={inputPrecioEditado}
+                          onChange={(e) => setInputPrecioEditado(e.target.value)}
+                          onFocus={(e) => e.target.select()}
+                          onBlur={() => confirmarEdicionPrecio(item.claveCarrito)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); confirmarEdicionPrecio(item.claveCarrito); }
+                            if (e.key === 'Escape') { e.preventDefault(); cancelarEdicionPrecio(); }
+                          }}
+                          className="input-precio-editable"
+                        />
+                      ) : (
+                        <div
+                          className="item-precio item-precio-editable"
+                          onClick={() => iniciarEdicionPrecio(item)}
+                          title="Clic para modificar el precio de esta venta"
+                        >
+                          S/ {item.precio.toFixed(2)}
+                        </div>
+                      )}
                     </div>
 
                     <div className="item-controles">
@@ -634,11 +709,13 @@ const getStockTexto = (stock, unidadMedida) => {
                         )}
                       </div>
 
+                      {/* 🆕 Descuento por línea en soles directos (antes era %) */}
                       <div className="descuento-control">
-                        <label>Desc %:</label>
+                        <label>Desc S/:</label>
                         <input
-                          type="number" min="0" max="100"
-                          value={item.descuento_porcentaje || 0}
+                          type="number" min="0" step="0.01"
+                          max={item.precio * item.cantidad}
+                          value={item.descuento_monto || 0}
                           onChange={(e) => aplicarDescuento(item.claveCarrito, parseFloat(e.target.value) || 0)}
                           className="input-descuento"
                           disabled={modoSoloLectura}
@@ -654,9 +731,9 @@ const getStockTexto = (stock, unidadMedida) => {
                     </div>
 
                     <div className="item-subtotal">
-                      {item.descuento_porcentaje > 0 && (
+                      {item.descuento_monto > 0 && (
                         <div className="item-descuento-aplicado">
-                          Descuento: -S/ {(item.precio * item.cantidad * item.descuento_porcentaje / 100).toFixed(2)}
+                          Descuento: -S/ {item.descuento_monto.toFixed(2)}
                         </div>
                       )}
                       <div className="subtotal-valor">

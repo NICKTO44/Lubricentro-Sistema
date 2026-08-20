@@ -733,6 +733,45 @@ if !sql_productos.contains("'METRO'") {
         println!("Restricción de unidad_medida actualizada (GALON y METRO agregados) — {} triggers restaurados", triggers_sql.len());
     }
 
+    // =====================================================
+    // 🆕 Migración: columna precio_compra en productos
+    // Guarda el costo de compra del producto — se puede editar a mano
+    // desde Inventario, pero al confirmar la recepción de una compra real
+    // desde Proveedores, ese valor manda y sobreescribe lo que hubiera.
+    // =====================================================
+    let has_precio_compra: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('productos') WHERE name='precio_compra'",
+            [],
+            |row| Ok(row.get::<_, i32>(0)? > 0),
+        )
+        .unwrap_or(false);
+
+    if !has_precio_compra {
+        println!("Agregando columna precio_compra a productos...");
+        conn.execute("ALTER TABLE productos ADD COLUMN precio_compra REAL DEFAULT 0", [])?;
+        println!("Columna precio_compra agregada");
+    }
+
+    // =====================================================
+    // 🆕 Migración: quitar el CHECK de turnos fijos en `cajas`
+    // Antes: turno solo podía ser 'MAÑANA' / 'TARDE' / 'NOCHE', ligado a
+    // horarios fijos. Ahora el negocio trabaja un solo horario (8am-8pm)
+    // y la caja se abre/cierra en cualquier momento — `turno` pasa a
+    // guardarse fijo como 'GENERAL', sin restricción de valor.
+    //
+    // No hay ningún trigger definido directamente ON cajas (los que la
+    // tocan están en ventas, devoluciones y movimientos_caja, y solo la
+    // referencian por nombre — no hace falta tocarlos).
+    // =====================================================
+    if let Err(e) = crate::commands::cajas::migrar_cajas_sin_turno_fijo(&conn) {
+        // 🆕 Bloqueante a propósito: si esta migración falla, la app NO debe
+        // arrancar con el esquema a medio migrar (eso generaría errores
+        // confusos más tarde, en pleno uso, al intentar abrir caja). Mejor
+        // que falle fuerte y claro acá mismo, al inicio.
+        panic!("Migración crítica de cajas falló, la app no puede continuar: {}", e);
+    }
+
     println!("Base de datos actualizada");
     Ok(())
 }

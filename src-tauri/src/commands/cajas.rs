@@ -1,5 +1,8 @@
 // commands/cajas.rs
 // Sistema de control de cajas - Solo 1 caja abierta a la vez
+// 🆕 Ya NO hay turnos ni restricción de horario: el negocio trabaja un solo
+// horario (8am-8pm) y la caja se puede abrir y cerrar en cualquier momento.
+// Tampoco se calcula puntualidad ("llegó tarde"): ya no aplica.
 
 use crate::database::DatabasePool;
 use crate::models::caja::*;
@@ -7,7 +10,7 @@ use rusqlite::{params, OptionalExtension};
 use serde_json;
 
 // =====================================================
-// COMANDO 1: ABRIR CAJA (solo 1 a la vez)
+// COMANDO 1: ABRIR CAJA (solo 1 a la vez, sin restricción de horario)
 // =====================================================
 #[tauri::command]
 pub fn abrir_caja(
@@ -16,7 +19,7 @@ pub fn abrir_caja(
 ) -> Result<CajaResponse, String> {
     let conn = db.get_conn();
 
-    // 1. Verificar que NO haya NINGUNA caja abierta en el sistema
+    // 1. Verificar que NO haya NINGUNA caja abierta en el sistema (solo hay una caja)
     let caja_abierta_sistema: Option<(i32, String)> = conn
         .query_row(
             "SELECT id, (SELECT nombre_completo FROM usuarios WHERE id = cajas.usuario_id) as cajero 
@@ -37,39 +40,15 @@ pub fn abrir_caja(
         return Err("El monto inicial no puede ser negativo".to_string());
     }
 
-    // 3. Obtener configuración del turno
-    let turno_config: (String, String, i32) = conn
-        .query_row(
-            "SELECT hora_inicio_esperada, hora_fin_esperada, tolerancia_minutos FROM turnos_configuracion WHERE nombre = ?",
-            params![&request.turno],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-        )
-        .map_err(|e| format!("Turno no válido: {}", e))?;
-
-    let (hora_esperada_inicio, hora_esperada_fin, tolerancia_minutos) = turno_config;
-
-    // 🆕 Bloquear apertura si el turno elegido no es el que corresponde a la hora actual
-    // (antes solo se "sugería" visualmente, pero se podía abrir cualquiera igual)
-    let turno_actual = turno_actual_segun_hora(&conn)?;
-    if turno_actual != request.turno {
-        return Err(format!(
-            "⏰ Ahora corresponde abrir el turno {} ({} - {}). No podés abrir el turno {} en este horario.",
-            turno_actual, hora_esperada_inicio, hora_esperada_fin, request.turno
-        ));
-    }
-
-    // 4. Calcular si llegó tarde (🆕 respetando los minutos de tolerancia configurados)
-    let hora_actual = chrono::Local::now().format("%H:%M:%S").to_string();
-    let (llego_tarde, minutos_retraso) = calcular_retraso(&hora_actual, &hora_esperada_inicio, tolerancia_minutos);
-
-    // 5. Insertar caja (usando localtime para las fechas)
+    // 3. Insertar caja — 🆕 sin turno real ni restricción de horario. El
+    // campo `turno` se guarda fijo en 'GENERAL' (ya no se valida contra
+    // `turnos_configuracion` ni se bloquea según la hora actual).
     let query = r"
         INSERT INTO cajas (
-            usuario_id, numero_caja, turno, monto_inicial, 
-            observaciones_apertura, hora_esperada_inicio, hora_esperada_fin,
-            minutos_retraso, llego_tarde,
+            usuario_id, numero_caja, turno, monto_inicial,
+            observaciones_apertura,
             fecha_apertura, hora_apertura
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 
+        ) VALUES (?, ?, 'GENERAL', ?, ?,
             datetime('now', 'localtime'),
             strftime('%H:%M:%S', 'now', 'localtime'))
     ";
@@ -79,32 +58,20 @@ pub fn abrir_caja(
         params![
             request.usuario_id,
             request.numero_caja,
-            &request.turno,
             request.monto_inicial,
             &request.observaciones,
-            &hora_esperada_inicio,
-            &hora_esperada_fin,
-            minutos_retraso,
-            if llego_tarde { 1 } else { 0 },
         ],
     )
     .map_err(|e| format!("Error al abrir caja: {}", e))?;
 
     let caja_id = conn.last_insert_rowid() as i32;
 
-    // 6. Obtener la caja creada
+    // 4. Obtener la caja creada
     let caja = obtener_caja_por_id(&conn, caja_id)?;
 
     Ok(CajaResponse {
         success: true,
-        message: if llego_tarde {
-            format!(
-                "Caja abierta. Llegaste {} minutos tarde.",
-                minutos_retraso
-            )
-        } else {
-            "Caja abierta exitosamente. A tiempo.".to_string()
-        },
+        message: "Caja abierta exitosamente.".to_string(),
         caja: Some(caja),
     })
 }
@@ -182,6 +149,7 @@ pub fn cerrar_caja(
         - gastos_total;
     let _ = cambio_total; // se sigue guardando como dato informativo, pero no resta del cuadre
     let _ = devoluciones_monto; // informativo — ya está reflejado dentro de ventas_efectivo cuando corresponde
+    let _ = fecha_apertura; // ya no se usa para calcular puntualidad
 
     // 4. Calcular diferencia (guardado internamente, NO se muestra al cajero)
     let diferencia = request.monto_contado - efectivo_esperado;
@@ -380,6 +348,7 @@ pub fn verificar_caja_abierta_sistema(
 
 // =====================================================
 // COMANDO 6: OBTENER REPORTE DE CIERRE
+// 🆕 Ya no incluye resumen de puntualidad (no hay turnos ni horario fijo)
 // =====================================================
 #[tauri::command]
 pub fn obtener_reporte_cierre(
@@ -427,24 +396,6 @@ pub fn obtener_reporte_cierre(
 
     let movimientos: Vec<MovimientoCaja> = movimientos_iter.filter_map(|r| r.ok()).collect();
 
-    let mensaje_puntualidad = if caja.llego_tarde {
-        format!(
-            "{}h {}min tarde",
-            caja.minutos_retraso / 60,
-            caja.minutos_retraso % 60
-        )
-    } else {
-        "A tiempo".to_string()
-    };
-
-    let resumen_puntualidad = ResumenPuntualidad {
-        hora_esperada: caja.hora_esperada_inicio.clone(),
-        hora_real: caja.hora_apertura.clone(),
-        llego_tarde: caja.llego_tarde,
-        minutos_retraso: caja.minutos_retraso,
-        mensaje: mensaje_puntualidad,
-    };
-
     let efectivo_calculado = caja.efectivo_esperado.unwrap_or(0.0);
     let efectivo_contado = caja.monto_final_contado.unwrap_or(0.0);
     let diferencia = caja.diferencia.unwrap_or(0.0);
@@ -465,7 +416,6 @@ pub fn obtener_reporte_cierre(
         caja,
         cajero_nombre,
         movimientos,
-        resumen_puntualidad,
         resumen_financiero,
     })
 }
@@ -496,11 +446,9 @@ pub fn obtener_historial_cajas(
         condiciones.push(format!("date(c.fecha_apertura) <= '{}'", fecha_fin));
     }
 
-    if let Some(ref turno) = filtros.turno {
-        if !turno.is_empty() && turno != "TODOS" {
-            condiciones.push(format!("c.turno = '{}'", turno));
-        }
-    }
+    // 🆕 El filtro de turno ya no se usa (siempre es 'GENERAL'), pero se deja
+    // el campo en FiltroCajas por compatibilidad — si llega algo, se ignora.
+    let _ = &filtros.turno;
 
     if let Some(uid) = filtros.usuario_id {
         condiciones.push(format!("c.usuario_id = {}", uid));
@@ -582,6 +530,7 @@ pub fn obtener_historial_cajas(
 // =====================================================
 // 🆕 COMANDO 8: OBTENER DETALLE COMPLETO DE UNA CAJA
 // (Para cuando admin hace clic en un registro del historial)
+// 🆕 Ya no incluye resumen de puntualidad
 // =====================================================
 #[tauri::command]
 pub fn obtener_detalle_caja(
@@ -631,24 +580,6 @@ pub fn obtener_detalle_caja(
 
     let movimientos: Vec<MovimientoCaja> = movimientos_iter.filter_map(|r| r.ok()).collect();
 
-    let mensaje_puntualidad = if caja.llego_tarde {
-        format!(
-            "{}h {}min tarde",
-            caja.minutos_retraso / 60,
-            caja.minutos_retraso % 60
-        )
-    } else {
-        "A tiempo".to_string()
-    };
-
-    let resumen_puntualidad = ResumenPuntualidad {
-        hora_esperada: caja.hora_esperada_inicio.clone(),
-        hora_real: caja.hora_apertura.clone(),
-        llego_tarde: caja.llego_tarde,
-        minutos_retraso: caja.minutos_retraso,
-        mensaje: mensaje_puntualidad,
-    };
-
     let efectivo_calculado = caja.efectivo_esperado.unwrap_or(0.0);
     let efectivo_contado = caja.monto_final_contado.unwrap_or(0.0);
     let diferencia = caja.diferencia.unwrap_or(0.0);
@@ -669,7 +600,6 @@ pub fn obtener_detalle_caja(
         caja,
         cajero_nombre,
         movimientos,
-        resumen_puntualidad,
         resumen_financiero,
     })
 }
@@ -704,12 +634,12 @@ fn obtener_caja_por_id(conn: &rusqlite::Connection, caja_id: i32) -> Result<Caja
                 hora_apertura: row.get(5)?,
                 monto_inicial: row.get(6)?,
                 observaciones_apertura: row.get(7)?,
-                hora_esperada_inicio: row.get(8)?,
+                hora_esperada_inicio: row.get(8)?, // 🆕 ahora Option<String> — puede venir NULL
                 minutos_retraso: row.get(9)?,
                 llego_tarde: row.get::<_, i32>(10)? == 1,
                 fecha_cierre: row.get(11)?,
                 hora_cierre: row.get(12)?,
-                hora_esperada_fin: row.get(13)?,
+                hora_esperada_fin: row.get(13)?, // 🆕 ahora Option<String>
                 monto_final_contado: row.get(14)?,
                 observaciones_cierre: row.get(15)?,
                 ventas_efectivo: row.get(16)?,
@@ -736,58 +666,177 @@ fn obtener_caja_por_id(conn: &rusqlite::Connection, caja_id: i32) -> Result<Caja
     .map_err(|e| format!("Error al obtener caja: {}", e))
 }
 
-// 🆕 Determina qué turno corresponde según la hora actual, recorriendo los
-// horarios configurados en `turnos_configuracion`. Maneja turnos que cruzan
-// medianoche (ej. Noche 22:00-06:00), donde hora_fin < hora_inicio.
-fn turno_actual_segun_hora(conn: &rusqlite::Connection) -> Result<String, String> {
-    use chrono::NaiveTime;
+// =====================================================
+// 🆕 MIGRACIÓN: quitar el CHECK de turnos fijos en `cajas`
+//
+// Antes: `turno` solo podía ser 'MAÑANA' / 'TARDE' / 'NOCHE', ligado a
+// horarios fijos en `turnos_configuracion`. Ahora el negocio trabaja un
+// solo horario (8am-8pm) y la caja se abre/cierra en cualquier momento —
+// `turno` pasa a guardarse fijo como 'GENERAL', sin restricción de valor.
+//
+// 🔧 FIX: aunque ningún trigger está definido "ON cajas", SQLite sí
+// revisa/recompila internamente cualquier trigger cuyo CUERPO mencione
+// el nombre "cajas" (como trg_actualizar_caja_venta, que está ON ventas
+// pero hace UPDATE cajas...) en el momento del ALTER TABLE ... RENAME TO.
+// Si la tabla vieja ya fue eliminada un paso antes en la misma transacción,
+// esa recompilación falla con "no such table: main.cajas". La solución,
+// igual que ya se aplica en la migración de productos (GALON/METRO), es
+// sacar TODOS los triggers de la base antes de tocar la tabla, y
+// recrearlos exactamente igual al final.
+//
+// Idempotente: revisa el SQL de creación de la tabla en sqlite_master y,
+// si ya no tiene el CHECK viejo, no hace nada.
+//
+// IMPORTANTE: llamar esta función UNA VEZ al iniciar la app, junto a las
+// demás migraciones idempotentes (después de abrir la conexión a SQLite).
+// =====================================================
+pub fn migrar_cajas_sin_turno_fijo(conn: &rusqlite::Connection) -> Result<(), String> {
+    let sql_actual: Option<String> = conn
+        .query_row(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='cajas'",
+            [],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(|e| format!("Error al leer esquema de cajas: {}", e))?;
 
-    let hora_actual = chrono::Local::now().format("%H:%M:%S").to_string();
-    let real = NaiveTime::parse_from_str(&hora_actual, "%H:%M:%S")
-        .map_err(|e| format!("Error al parsear hora actual: {}", e))?;
+    let necesita_migrar = match &sql_actual {
+        Some(sql) => sql.contains("CHECK(turno IN"),
+        None => false, // la tabla no existe todavía — nada que migrar
+    };
 
-    let mut stmt = conn
-        .prepare("SELECT nombre, hora_inicio_esperada, hora_fin_esperada FROM turnos_configuracion")
-        .map_err(|e| format!("Error al leer turnos: {}", e))?;
+    if !necesita_migrar {
+        return Ok(());
+    }
 
-    let turnos = stmt
-        .query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?))
-        })
-        .map_err(|e| format!("Error al leer turnos: {}", e))?;
+    // 🔧 Guardamos el SQL exacto de TODOS los triggers que existan ahora
+    // mismo (no solo los que mencionan "cajas") — mismo patrón ya probado
+    // en la migración de productos. Los recreamos tal cual al final.
+    let triggers_sql: Vec<String> = {
+        let mut stmt = conn
+            .prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND sql IS NOT NULL")
+            .map_err(|e| format!("Error al leer triggers: {}", e))?;
+        let filas = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| format!("Error al leer triggers: {}", e))?;
+        filas.filter_map(|r| r.ok()).collect()
+    };
+    let triggers_nombres: Vec<String> = {
+        let mut stmt = conn
+            .prepare("SELECT name FROM sqlite_master WHERE type='trigger'")
+            .map_err(|e| format!("Error al leer nombres de triggers: {}", e))?;
+        let filas = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| format!("Error al leer nombres de triggers: {}", e))?;
+        filas.filter_map(|r| r.ok()).collect()
+    };
 
-    for turno in turnos {
-        let (nombre, inicio_str, fin_str) = turno.map_err(|e| format!("Error al leer turno: {}", e))?;
-        let inicio = NaiveTime::parse_from_str(&inicio_str, "%H:%M:%S").unwrap();
-        let fin = NaiveTime::parse_from_str(&fin_str, "%H:%M:%S").unwrap();
+    conn.execute("PRAGMA foreign_keys = OFF", [])
+        .map_err(|e| format!("Error al desactivar foreign_keys: {}", e))?;
 
-        let dentro_del_rango = if inicio <= fin {
-            real >= inicio && real < fin
-        } else {
-            // El turno cruza medianoche (ej. 22:00 - 06:00)
-            real >= inicio || real < fin
-        };
+    conn.execute("BEGIN TRANSACTION", [])
+        .map_err(|e| format!("Error al iniciar migración de cajas: {}", e))?;
 
-        if dentro_del_rango {
-            return Ok(nombre);
+    let resultado: Result<(), rusqlite::Error> = (|| {
+        for nombre in &triggers_nombres {
+            conn.execute(&format!("DROP TRIGGER IF EXISTS {}", nombre), [])?;
         }
+
+        conn.execute_batch(
+            r#"
+            CREATE TABLE cajas_nueva (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              usuario_id INTEGER NOT NULL,
+              numero_caja INTEGER DEFAULT 1,
+              turno TEXT NOT NULL DEFAULT 'GENERAL',
+              fecha_apertura TEXT DEFAULT (datetime('now', 'localtime')),
+              hora_apertura TEXT DEFAULT (strftime('%H:%M:%S', 'now', 'localtime')),
+              monto_inicial REAL NOT NULL CHECK (monto_inicial >= 0),
+              observaciones_apertura TEXT,
+              hora_esperada_inicio TEXT,
+              minutos_retraso INTEGER DEFAULT 0,
+              llego_tarde INTEGER DEFAULT 0,
+              fecha_cierre TEXT,
+              hora_cierre TEXT,
+              hora_esperada_fin TEXT,
+              monto_final_contado REAL,
+              observaciones_cierre TEXT,
+              desglose_efectivo TEXT,
+              ventas_efectivo REAL DEFAULT 0,
+              ventas_tarjeta REAL DEFAULT 0,
+              ventas_transferencia REAL DEFAULT 0,
+              total_ventas REAL DEFAULT 0,
+              numero_transacciones INTEGER DEFAULT 0,
+              ticket_promedio REAL DEFAULT 0,
+              devoluciones_monto REAL DEFAULT 0,
+              devoluciones_cantidad INTEGER DEFAULT 0,
+              retiros_total REAL DEFAULT 0,
+              ingresos_total REAL DEFAULT 0,
+              gastos_total REAL DEFAULT 0,
+              cambio_total REAL DEFAULT 0,
+              efectivo_esperado REAL,
+              diferencia REAL,
+              estado_diferencia TEXT CHECK(estado_diferencia IN ('SIN_DIFERENCIA', 'ACEPTABLE', 'SIGNIFICATIVA')),
+              justificacion_diferencia TEXT,
+              estado TEXT DEFAULT 'ABIERTA' CHECK(estado IN ('ABIERTA', 'CERRADA')),
+              duracion_turno_minutos INTEGER,
+              FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+            );
+
+            INSERT INTO cajas_nueva (
+              id, usuario_id, numero_caja, turno, fecha_apertura, hora_apertura,
+              monto_inicial, observaciones_apertura, hora_esperada_inicio,
+              minutos_retraso, llego_tarde, fecha_cierre, hora_cierre,
+              hora_esperada_fin, monto_final_contado, observaciones_cierre,
+              desglose_efectivo, ventas_efectivo, ventas_tarjeta, ventas_transferencia,
+              total_ventas, numero_transacciones, ticket_promedio,
+              devoluciones_monto, devoluciones_cantidad, retiros_total,
+              ingresos_total, gastos_total, cambio_total, efectivo_esperado,
+              diferencia, estado_diferencia, justificacion_diferencia, estado,
+              duracion_turno_minutos
+            )
+            SELECT
+              id, usuario_id, numero_caja, turno, fecha_apertura, hora_apertura,
+              monto_inicial, observaciones_apertura, hora_esperada_inicio,
+              minutos_retraso, llego_tarde, fecha_cierre, hora_cierre,
+              hora_esperada_fin, monto_final_contado, observaciones_cierre,
+              desglose_efectivo, ventas_efectivo, ventas_tarjeta, ventas_transferencia,
+              total_ventas, numero_transacciones, ticket_promedio,
+              devoluciones_monto, devoluciones_cantidad, retiros_total,
+              ingresos_total, gastos_total, cambio_total, efectivo_esperado,
+              diferencia, estado_diferencia, justificacion_diferencia, estado,
+              duracion_turno_minutos
+            FROM cajas;
+
+            DROP TABLE cajas;
+            ALTER TABLE cajas_nueva RENAME TO cajas;
+
+            CREATE INDEX idx_cajas_usuario ON cajas(usuario_id);
+            CREATE INDEX idx_cajas_fecha ON cajas(fecha_apertura);
+            CREATE INDEX idx_cajas_estado ON cajas(estado);
+            CREATE INDEX idx_cajas_turno ON cajas(turno);
+            "#,
+        )?;
+
+        // Recrear cada trigger, exactamente con el mismo SQL que tenía antes
+        for trigger_sql in &triggers_sql {
+            conn.execute(trigger_sql, [])?;
+        }
+
+        Ok(())
+    })();
+
+    if let Err(e) = resultado {
+        let _ = conn.execute("ROLLBACK", []);
+        let _ = conn.execute("PRAGMA foreign_keys = ON", []);
+        return Err(format!("Error en migración de cajas: {}", e));
     }
 
-    Err("No se pudo determinar el turno correspondiente a la hora actual".to_string())
-}
+    conn.execute("COMMIT", [])
+        .map_err(|e| format!("Error al confirmar migración de cajas: {}", e))?;
 
-fn calcular_retraso(hora_real: &str, hora_esperada: &str, tolerancia_minutos: i32) -> (bool, i32) {
-    use chrono::NaiveTime;
+    conn.execute("PRAGMA foreign_keys = ON", [])
+        .map_err(|e| format!("Error al reactivar foreign_keys: {}", e))?;
 
-    let real = NaiveTime::parse_from_str(hora_real, "%H:%M:%S").unwrap();
-    let esperada = NaiveTime::parse_from_str(hora_esperada, "%H:%M:%S").unwrap();
-
-    if real > esperada {
-        let diferencia = real.signed_duration_since(esperada);
-        let minutos = diferencia.num_minutes() as i32;
-        // 🆕 Dentro de la tolerancia configurada (ej. 15 min) no se considera tarde
-        (minutos > tolerancia_minutos, minutos)
-    } else {
-        (false, 0)
-    }
+    Ok(())
 }

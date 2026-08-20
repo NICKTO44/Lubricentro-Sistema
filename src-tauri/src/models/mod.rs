@@ -13,7 +13,7 @@ pub use venta::{Venta, DetalleVenta, VentaNueva, VentaResponse};
 pub use caja::{
     Caja, AbrirCajaRequest, CerrarCajaRequest, DesgloseDenominaciones,
     MovimientoCaja, RegistrarMovimientoRequest, ReporteCierreCaja,
-    ResumenPuntualidad, ResumenFinanciero, CajaResponse,
+    ResumenFinanciero, CajaResponse,
 };
 pub use proveedor::{
     Proveedor, ProveedorNuevo, ProveedorResponse, ProveedoresResponse,

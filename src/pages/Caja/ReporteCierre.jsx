@@ -1,4 +1,5 @@
 // Caja/ReporteCierre.jsx
+// 🆕 Ya no muestra puntualidad (no hay turnos ni horario fijo)
 import { useRef } from 'react';
 import { IconReceipt } from '@tabler/icons-react';
 import { formatearMoneda, formatearDuracion } from '../../services/cajaService';
@@ -60,25 +61,15 @@ function ReporteCierre({ reporte, onCerrar }) {
 
           {/* INFO DEL TURNO */}
           <div className="reporte-seccion">
-            <h3>Información del Turno</h3>
+            <h3>Información de la Jornada</h3>
             <div className="info-tabla">
               <div className="info-fila">
                 <span className="info-label">Cajero:</span>
                 <span className="info-valor">{reporte.cajero_nombre}</span>
               </div>
               <div className="info-fila">
-                <span className="info-label">Turno:</span>
-                <span className="info-valor turno-badge">{reporte.caja.turno}</span>
-              </div>
-              <div className="info-fila">
                 <span className="info-label">Apertura:</span>
-                <span className="info-valor">
-                  {reporte.caja.hora_apertura}
-                  {reporte.resumen_puntualidad.llego_tarde
-                    ? <span className="badge-tarde"> {reporte.resumen_puntualidad.mensaje}</span>
-                    : <span className="badge-puntual">A tiempo</span>
-                  }
-                </span>
+                <span className="info-valor">{reporte.caja.hora_apertura}</span>
               </div>
               <div className="info-fila">
                 <span className="info-label">Cierre:</span>
@@ -202,7 +193,7 @@ function ReporteCierre({ reporte, onCerrar }) {
 
           {/* SECCIÓN 3: TOTAL GENERAL */}
           <div className="reporte-seccion reporte-total-general">
-            <h3>Resumen Total del Turno</h3>
+            <h3>Resumen Total de la Jornada</h3>
             <div className="total-general-tabla">
               <div className="total-general-fila">
                 <span>Total Digital (tarjeta + transferencia)</span>

@@ -1,5 +1,7 @@
 // models/caja.rs
 // Modelos para el sistema de control de cajas
+// 🆕 Ya no hay turnos ni puntualidad: el negocio trabaja un solo horario
+// y la caja se abre/cierra en cualquier momento.
 
 use serde::{Deserialize, Serialize};
 
@@ -11,23 +13,24 @@ pub struct Caja {
     pub id: i32,
     pub usuario_id: i32,
     pub numero_caja: i32,
-    pub turno: String,
-    
+    pub turno: String, // 🆕 siempre 'GENERAL' — se mantiene la columna por compatibilidad, ya no distingue horarios
+
     // Apertura
     pub fecha_apertura: String,
     pub hora_apertura: String,
     pub monto_inicial: f64,
     pub observaciones_apertura: Option<String>,
-    
-    // Puntualidad
-    pub hora_esperada_inicio: String,
+
+    // 🆕 Puntualidad — ya no se calcula, quedan vacíos/en 0 en cajas nuevas.
+    // Se dejan como Option<String> porque ahora pueden venir NULL.
+    pub hora_esperada_inicio: Option<String>,
     pub minutos_retraso: i32,
     pub llego_tarde: bool,
-    
+
     // Cierre
     pub fecha_cierre: Option<String>,
     pub hora_cierre: Option<String>,
-    pub hora_esperada_fin: String,
+    pub hora_esperada_fin: Option<String>,
     pub monto_final_contado: Option<f64>,
     pub observaciones_cierre: Option<String>,
     
@@ -62,6 +65,8 @@ pub struct Caja {
 
 // =====================================================
 // REQUEST: Abrir Caja
+// 🆕 `turno` se mantiene por compatibilidad con el frontend, pero el
+// backend ya no lo valida ni lo usa — siempre guarda 'GENERAL'.
 // =====================================================
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AbrirCajaRequest {
@@ -146,26 +151,14 @@ pub struct RegistrarMovimientoRequest {
 
 // =====================================================
 // RESPONSE: Reporte de Cierre
+// 🆕 Ya no incluye resumen_puntualidad
 // =====================================================
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReporteCierreCaja {
     pub caja: Caja,
     pub cajero_nombre: String,
     pub movimientos: Vec<MovimientoCaja>,
-    pub resumen_puntualidad: ResumenPuntualidad,
     pub resumen_financiero: ResumenFinanciero,
-}
-
-// =====================================================
-// MODELO: Resumen de Puntualidad
-// =====================================================
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ResumenPuntualidad {
-    pub hora_esperada: String,
-    pub hora_real: String,
-    pub llego_tarde: bool,
-    pub minutos_retraso: i32,
-    pub mensaje: String,
 }
 
 // =====================================================
@@ -221,6 +214,7 @@ pub struct HistorialCajaItem {
 
 // =====================================================
 // 🆕 REQUEST: Filtros para Historial de Cajas
+// (`turno` se mantiene por compatibilidad pero ya no se usa)
 // =====================================================
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FiltroCajas {

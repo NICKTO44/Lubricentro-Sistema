@@ -207,11 +207,15 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
       });
     } else {
       setCategoriaEditando(null);
-      // En modo MINIMARKET no tiene sentido ofrecer tallas de ropa/calzado por defecto
+      // 🔧 FIX: el rubro fijo de este sistema es Lubricentro (modo_negocio
+      // = 'LUBRICENTRO'), no Ropa ni Minimarket — antes esto solo revisaba
+      // "MINIMARKET" y todo lo demás (incluido Lubricentro) caía en 'ROPA'
+      // por defecto, sin sentido para este negocio. Ahora tallas solo
+      // aplica cuando el rubro es específicamente 'ROPA'.
       setFormCategoria({
         nombre: '',
         descripcion: '',
-        tipo_talla: configTienda.modo_negocio === 'MINIMARKET' ? 'NINGUNA' : 'ROPA',
+        tipo_talla: configTienda.modo_negocio === 'ROPA' ? 'ROPA' : 'NINGUNA',
       });
     }
     setModalCategoria(true);
@@ -669,15 +673,13 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
                 <textarea value={formCategoria.descripcion}
                   onChange={(e) => setFormCategoria({...formCategoria, descripcion: e.target.value})} rows="3" />
               </div>
-              {/* 🆕 Tipo de categoría: solo tiene sentido ofrecer tallas de ropa/calzado en modo ROPA */}
-              {configTienda.modo_negocio === 'MINIMARKET' ? (
-                <div className="form-group">
-                  <label>Tipo</label>
-                  <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0' }}>
-                    Sin tallas — este rubro no maneja variantes de talla.
-                  </p>
-                </div>
-              ) : (
+              {/* 🔧 FIX: el selector de tallas (Ropa/Calzado/Sin tallas) solo tiene
+                  sentido en el rubro Ropa. Este sistema corre en modo Lubricentro
+                  (modo_negocio = 'LUBRICENTRO'), así que ya no se muestra nada acá
+                  — el formulario queda solo con Nombre y Descripción. El valor
+                  tipo_talla se sigue mandando al backend en 'NINGUNA' por defecto
+                  (definido en abrirModalCategoria), sin pedírselo al usuario. */}
+              {configTienda.modo_negocio === 'ROPA' && (
                 <div className="form-group">
                   <label>Tipo de Categoría *</label>
                   <select

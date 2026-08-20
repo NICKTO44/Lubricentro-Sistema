@@ -70,6 +70,9 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
   const [guardando, setGuardando] = useState(false);
 
   // Form data base
+  // 🆕 Ya NO incluye descuento_porcentaje — el descuento se decide en el
+  // momento de la venta (en soles, desde el POS), no como propiedad fija
+  // del producto en el catálogo.
   const [formData, setFormData] = useState({
     codigo: '',
     nombre: '',
@@ -81,9 +84,9 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
     lleva_vencimiento: false,
     fecha_vencimiento_inicial: '',
     categoria_id: '',
-    descuento_porcentaje: 0,
     imagen_url: null,
     viscosidad: '',
+    precio_compra: '',
   });
   const [procesandoImagen, setProcesandoImagen] = useState(false);
   const [errorImagen, setErrorImagen] = useState('');
@@ -185,9 +188,9 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       lleva_vencimiento: false,
       fecha_vencimiento_inicial: '',
       categoria_id: primeraCat ? primeraCat[0] : '',
-      descuento_porcentaje: 0,
       imagen_url: null,
       viscosidad: '',
+      precio_compra: '',
     });
     setErrorImagen('');
     setMostrarModal(true);
@@ -230,9 +233,9 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       unidad_medida: producto.unidad_medida || 'UNIDAD',
       lleva_vencimiento: !!producto.lleva_vencimiento,
       categoria_id: producto.categoria_id.toString(),
-      descuento_porcentaje: producto.descuento_porcentaje || 0,
       imagen_url: producto.imagen_url || null,
       viscosidad: producto.viscosidad || '',
+      precio_compra: (producto.precio_compra || 0).toString(),
     });
     setErrorImagen('');
     setMostrarModal(true);
@@ -267,11 +270,15 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
           unidadMedida: formData.unidad_medida,
           llevaVencimiento: formData.lleva_vencimiento,
           categoriaId: parseInt(formData.categoria_id),
-          descuentoPorcentaje: parseFloat(formData.descuento_porcentaje) || 0,
+          // 🆕 El descuento por producto ya no existe en el catálogo — se
+          // manda fijo en 0 porque el comando Rust todavía espera este
+          // parámetro, pero ya no se usa para nada en la venta.
+          descuentoPorcentaje: 0,
           tieneVariantes: false,
           variantes: null,
           imagenUrl: formData.imagen_url || null,
           viscosidad: formData.viscosidad || null,
+          precioCompra: parseFloat(formData.precio_compra) || 0,
         });
         if (resultado.success) {
           mostrarMensaje('success', 'Producto actualizado correctamente');
@@ -298,11 +305,13 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
             unidad_medida: formData.unidad_medida,
             lleva_vencimiento: formData.lleva_vencimiento,
             categoria_id: parseInt(formData.categoria_id),
-            descuento_porcentaje: parseFloat(formData.descuento_porcentaje) || 0,
+            // 🆕 Igual que arriba: se manda fijo en 0, ya no viene del formulario
+            descuento_porcentaje: 0,
             tiene_variantes: false,
             variantes: null,
             imagen_url: formData.imagen_url || null,
             viscosidad: formData.viscosidad || null,
+            precio_compra: parseFloat(formData.precio_compra) || 0,
           },
         });
         if (resultado.success) {
@@ -638,16 +647,30 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                 />
               </div>
 
-              {/* Precio + Stock mínimo + Unidad + Descuento */}
+              {/* Precio + Stock mínimo + Unidad + Viscosidad + Vencimiento */}
+              {/* 🆕 Ya no hay campo de "Descuento %" — el descuento se decide
+                  en el momento de la venta, desde el POS, no acá. */}
               <div className="form-row">
                 <div className="form-group">
-                  <label>Precio *</label>
+                  <label>Precio de venta *</label>
                   <input
                     type="number" step="0.01"
                     value={formData.precio}
                     onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
                     required
                   />
+                </div>
+                <div className="form-group">
+                  <label>Precio de compra</label>
+                  <input
+                    type="number" step="0.01" min="0"
+                    value={formData.precio_compra}
+                    onChange={(e) => setFormData({ ...formData, precio_compra: e.target.value })}
+                    placeholder="0.00"
+                  />
+                  <small className="form-hint">
+                    Se actualiza solo al recibir una compra real desde Proveedores — acá también lo puedes ajustar a mano
+                  </small>
                 </div>
                 <div className="form-group">
                   <label>Stock Mínimo *</label>
@@ -703,15 +726,6 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                   </div>
                   <small className="form-hint">Ej: aceites, refrigerante, líquido de frenos, aditivos sí — filtros, accesorios no</small>
                 </div>
-                <div className="form-group">
-                  <label>Descuento %</label>
-                  <input
-                    type="number" min="0" max="100" step="0.01"
-                    value={formData.descuento_porcentaje}
-                    onChange={(e) => setFormData({ ...formData, descuento_porcentaje: parseFloat(e.target.value) || 0 })}
-                    placeholder="0"
-                  />
-                </div>
               </div>
 
               {/* Stock (según si lleva vencimiento o no) */}
@@ -763,9 +777,6 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
                       onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                       required
                     />
-                    <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
-                      Descuento automático al escanear este producto (0-100%)
-                    </small>
                   </>
                 )}
               </div>

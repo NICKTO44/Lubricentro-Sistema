@@ -67,8 +67,11 @@ pub struct ProductoVenta {
     pub codigo: String,
     pub precio: f64,
     pub cantidad: f64,
-    #[serde(rename = "descuentoPorcentaje")]
-    pub descuento_porcentaje: Option<f64>,
+    // 🆕 Descuento por línea en SOLES directos (antes era un porcentaje).
+    // El frontend ya lo limita entre 0 y el subtotal de la línea, pero
+    // igual se vuelve a acotar aquí abajo por seguridad.
+    #[serde(rename = "descuentoMonto")]
+    pub descuento_monto: Option<f64>,
     // 🆕 Campos de variante — opcionales para no romper productos sin tallas
     #[serde(rename = "varianteId")]
     pub variante_id: Option<i32>,
@@ -197,12 +200,15 @@ pub fn procesar_venta(
     let folio = format!("V-{}-{:04}", fecha_actual, siguiente_numero);
 
     // 2. Calcular subtotal y descuento total
+    // 🆕 El descuento ya viene en soles directos desde el frontend — se
+    // acota entre 0 y el subtotal de la línea para nunca dejar un total
+    // negativo, aunque el frontend ya hace esta misma validación antes.
     let mut subtotal = 0.0f64;
     let mut descuento_total = 0.0f64;
 
     for p in &productos {
         let sub = p.precio * p.cantidad as f64;
-        let desc = sub * (p.descuento_porcentaje.unwrap_or(0.0) / 100.0);
+        let desc = p.descuento_monto.unwrap_or(0.0).max(0.0).min(sub);
         subtotal += sub;
         descuento_total += desc;
     }
@@ -223,7 +229,7 @@ pub fn procesar_venta(
     // 4. Insertar detalles con variante_id y talla
     for p in &productos {
         let sub = p.precio * p.cantidad as f64;
-        let desc = sub * (p.descuento_porcentaje.unwrap_or(0.0) / 100.0);
+        let desc = p.descuento_monto.unwrap_or(0.0).max(0.0).min(sub);
         let total_linea = sub - desc;
 
         // 🆕 Si el producto lleva vencimiento, descontar del lote que vence
