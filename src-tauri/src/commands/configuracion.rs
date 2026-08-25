@@ -16,8 +16,8 @@ pub struct ConfiguracionTienda {
     pub impresora_tipo: String,
     pub impresora_puerto: i32,
     pub modo_negocio: String,  // 🆕 'ROPA' | 'MINIMARKET'
-    pub nubefact_token: Option<String>,  // 🆕 token de la cuenta de NubeFacT (facturación electrónica)
-    pub nubefact_ruta: Option<String>,   // 🆕 ruta de la cuenta de NubeFacT
+    pub facturalibre_token: Option<String>,  // 🆕 token de la cuenta de FacturaLibre (facturación electrónica)
+    pub facturalibre_ruta: Option<String>,   // 🆕 URL de la API de la cuenta FacturaLibre
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -51,8 +51,8 @@ pub fn obtener_configuracion_tienda(
 ) -> Result<ConfiguracionTienda, String> {
     let conn = db.get_conn();
 
-    let query = "SELECT id, nombre_tienda, direccion, telefono, email, rfc, mensaje_recibo, COALESCE(impresora_ip, ''), COALESCE(impresora_tipo, 'TERMICA'), COALESCE(impresora_puerto, 9100), COALESCE(modo_negocio, 'ROPA'), nubefact_token, nubefact_ruta FROM configuracion_tienda LIMIT 1";
-    
+    let query = "SELECT id, nombre_tienda, direccion, telefono, email, rfc, mensaje_recibo, COALESCE(impresora_ip, ''), COALESCE(impresora_tipo, 'TERMICA'), COALESCE(impresora_puerto, 9100), COALESCE(modo_negocio, 'ROPA'), facturalibre_token, facturalibre_ruta FROM configuracion_tienda LIMIT 1";
+
     let result = conn
         .query_row(query, [], |row| {
             Ok(ConfiguracionTienda {
@@ -67,8 +67,8 @@ pub fn obtener_configuracion_tienda(
                 impresora_tipo: row.get(8)?,
                 impresora_puerto: row.get(9)?,
                 modo_negocio: row.get(10)?,
-                nubefact_token: row.get(11)?,
-                nubefact_ruta: row.get(12)?,
+                facturalibre_token: row.get(11)?,
+                facturalibre_ruta: row.get(12)?,
             })
         })
         .optional()
@@ -193,11 +193,11 @@ pub fn actualizar_configuracion_tienda(
 }
 
 // =====================================================
-// 🆕 COMANDO: Guardar el token de la cuenta de NubeFacT del negocio
+// 🆕 COMANDO: Guardar el token de la cuenta de FacturaLibre del negocio
 // (facturación electrónica — cada instalación usa su propia cuenta y RUC)
 // =====================================================
 #[tauri::command]
-pub fn guardar_token_nubefact(
+pub fn guardar_token_facturalibre(
     db: tauri::State<DatabasePool>,
     token: String,
     ruta: String,
@@ -209,7 +209,7 @@ pub fn guardar_token_nubefact(
     let ruta_valor: Option<&str> = if ruta_limpia.is_empty() { None } else { Some(ruta_limpia) };
 
     conn.execute(
-        "UPDATE configuracion_tienda SET nubefact_token = ?, nubefact_ruta = ?",
+        "UPDATE configuracion_tienda SET facturalibre_token = ?, facturalibre_ruta = ?",
         params![token_valor, ruta_valor],
     )
     .map_err(|e| format!("Error al guardar los datos: {}", e))?;

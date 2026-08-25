@@ -282,26 +282,57 @@ BEGIN
 END;
 
 -- =====================================================
--- 🆕 TABLA: comprobantes_electronicos (boletas/facturas vía NubeFacT)
+-- 🆕 TABLA: clientes
+-- Clientes fijos del lubricentro — se guardan sus datos para no
+-- tener que volver a escribirlos cada vez que se emite una boleta,
+-- factura o comprobante de venta.
+-- =====================================================
+DROP TABLE IF EXISTS clientes;
+CREATE TABLE clientes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT NOT NULL,           -- nombre completo (DNI) o razón social (RUC)
+  tipo_documento TEXT DEFAULT 'DNI' CHECK(tipo_documento IN ('DNI', 'RUC', 'NINGUNO')),
+  numero_documento TEXT,
+  telefono TEXT,
+  email TEXT,
+  direccion TEXT,
+  notas TEXT,
+  activo INTEGER DEFAULT 1,
+  fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),
+  fecha_actualizacion TEXT DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE INDEX idx_clientes_nombre ON clientes(nombre);
+CREATE INDEX idx_clientes_documento ON clientes(numero_documento);
+CREATE INDEX idx_clientes_activo ON clientes(activo);
+
+-- =====================================================
+-- 🆕 TABLA: comprobantes_electronicos (boletas/facturas vía FacturaLibre)
 -- =====================================================
 DROP TABLE IF EXISTS comprobantes_electronicos;
 CREATE TABLE comprobantes_electronicos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   venta_id INTEGER NOT NULL,
+  cliente_id INTEGER,             -- 🆕 referencia opcional al cliente guardado, si se eligió uno
   tipo TEXT NOT NULL CHECK (tipo IN ('BOLETA', 'FACTURA')),
   serie TEXT,
   numero INTEGER,
   cliente_documento TEXT,        -- DNI (boleta) o RUC (factura), opcional
   cliente_nombre TEXT,
-  estado TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'ACEPTADO', 'RECHAZADO', 'ERROR')),
-  mensaje_sunat TEXT,            -- respuesta/motivo de rechazo, si aplica
+  estado TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'ACEPTADO', 'OBSERVADO', 'RECHAZADO', 'ERROR')),
+  mensaje_sunat TEXT,            -- respuesta/motivo de rechazo u observación, si aplica
   enlace_pdf TEXT,
   enlace_xml TEXT,
+  enlace_cdr TEXT,               -- 🆕 constancia de recepción de SUNAT (CDR)
+  external_id TEXT,              -- 🆕 id único que asigna FacturaLibre — se usa para reenvíos/consultas
+  hash TEXT,                     -- 🆕 hash del comprobante que devuelve FacturaLibre
   fecha_emision TEXT DEFAULT (datetime('now', 'localtime')),
-  FOREIGN KEY (venta_id) REFERENCES ventas(id)
+  FOREIGN KEY (venta_id) REFERENCES ventas(id),
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id)
 );
 
 CREATE INDEX idx_comprobantes_venta ON comprobantes_electronicos(venta_id);
+CREATE INDEX idx_comprobantes_cliente ON comprobantes_electronicos(cliente_id);
 
 -- =====================================================
 -- TABLA: devoluciones (clientes)
@@ -584,8 +615,10 @@ CREATE TABLE configuracion_tienda (
   impresora_puerto INTEGER DEFAULT 9100,
   modo_negocio TEXT DEFAULT 'LUBRICENTRO' CHECK(modo_negocio IN ('LUBRICENTRO')), -- Rubro único: Lubricentro (usa la lógica interna "Lubricentro": venta por unidad/medida, sin tallas)
   modo_negocio_configurado INTEGER DEFAULT 1, -- Rubro fijo de fábrica, no requiere wizard de primer arranque
-  nubefact_token TEXT, -- 🆕 token de la cuenta de NubeFacT del negocio (para boletas/facturas electrónicas)
-  nubefact_ruta TEXT, -- 🆕 ruta/URL de la cuenta de NubeFacT del negocio
+  nubefact_token TEXT, -- (en desuso — se reemplazó por FacturaLibre, se deja la columna para no romper instalaciones migradas)
+  nubefact_ruta TEXT, -- (en desuso — ídem)
+  facturalibre_token TEXT, -- 🆕 token de la cuenta de FacturaLibre.org del negocio (para boletas/facturas electrónicas)
+  facturalibre_ruta TEXT, -- 🆕 URL de la API de la cuenta FacturaLibre del negocio (ej. https://tuempresa.proapi.facturalibre.org/api/documents)
   fecha_actualizacion TEXT DEFAULT (datetime('now', 'localtime'))
 );
 -- =====================================================

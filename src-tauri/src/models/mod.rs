@@ -6,6 +6,7 @@ pub mod producto;
 pub mod venta;
 pub mod caja;
 pub mod proveedor; // 🆕
+pub mod cliente; // 🆕
 
 pub use usuario::{Usuario, UsuarioLogin, UsuarioResponse};
 pub use producto::{Producto, ProductoNuevo, ProductoResponse, ProductosResponse};
@@ -22,3 +23,4 @@ pub use proveedor::{
     RegistrarPagoRequest, CompraResponse, ComprasResponse,
     ItemCompra, ItemRecepcion,
 }; // 🆕
+pub use cliente::{Cliente, ClienteNuevo, ClienteResponse, ClientesResponse}; // 🆕

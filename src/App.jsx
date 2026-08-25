@@ -9,6 +9,7 @@ import Reportes from './pages/Reportes/Reportes';
 import Configuracion from './pages/Configuracion/Configuracion';
 import Devoluciones from './pages/Devoluciones/Devoluciones';
 import Proveedores from './pages/Proveedores/Proveedores';
+import Clientes from './pages/Clientes/Clientes';
 import ActivarLicencia from './pages/ActivarLicencia/ActivarLicencia';
 import BannerLicencia from './components/BannerLicencia';
 import SplashScreen from './pages/SplashScreen/SplashScreen';
@@ -157,9 +158,9 @@ function App() {
   const tienePermiso = (modulo) => {
     if (!usuario) return false;
     const permisos = {
-      1: { pos: true, caja: true, inventario: true, reportes: true, configuracion: true, devoluciones: true, proveedores: true },
-      2: { pos: true, caja: true, inventario: false, reportes: true, configuracion: false, devoluciones: false, proveedores: false },
-      3: { pos: false, caja: false, inventario: true, reportes: false, configuracion: false, devoluciones: false, proveedores: true },
+      1: { pos: true, caja: true, inventario: true, reportes: true, configuracion: true, devoluciones: true, proveedores: true, clientes: true },
+      2: { pos: true, caja: true, inventario: false, reportes: true, configuracion: false, devoluciones: false, proveedores: false, clientes: true },
+      3: { pos: false, caja: false, inventario: true, reportes: false, configuracion: false, devoluciones: false, proveedores: true, clientes: false },
     };
     return permisos[usuario.rol_id]?.[modulo] || false;
   };
@@ -182,6 +183,7 @@ function App() {
       case 'devoluciones': return <Devoluciones  usuario={usuario} onVolver={() => setVistaActual('pos')} modoSoloLectura={modoSoloLectura} />;
       case 'configuracion':return <Configuracion usuario={usuario} onVolver={() => setVistaActual('pos')} modoSoloLectura={modoSoloLectura} onLicenciaActualizada={verificarLicencia} />;
       case 'proveedores':  return <Proveedores   usuario={usuario} onVolver={() => setVistaActual('pos')} modoSoloLectura={modoSoloLectura} />;
+      case 'clientes':     return <Clientes      usuario={usuario} onVolver={() => setVistaActual('pos')} modoSoloLectura={modoSoloLectura} />;
       default:             return <POS           usuario={usuario} onVolver={() => setVistaActual('pos')} modoSoloLectura={modoSoloLectura} />;
     }
   };

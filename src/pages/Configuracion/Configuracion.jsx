@@ -26,11 +26,11 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
   const [tabActual, setTabActual] = useState('tienda');
   const [estadoLicenciaLocal, setEstadoLicenciaLocal] = useState(null);
   const [mostrarActivarLicencia, setMostrarActivarLicencia] = useState(false);
-  const [nubefactToken, setNubefactToken] = useState('');
-  const [nubefactRuta, setNubefactRuta] = useState('');
-  const [guardandoNubefact, setGuardandoNubefact] = useState(false);
-  const [probandoNubefact, setProbandoNubefact] = useState(false);
-  const [resultadoPruebaNubefact, setResultadoPruebaNubefact] = useState(null);
+  const [facturalibreToken, setFacturalibreToken] = useState('');
+  const [facturalibreRuta, setFacturalibreRuta] = useState('');
+  const [guardandoFacturalibre, setGuardandoFacturalibre] = useState(false);
+  const [probandoFacturalibre, setProbandoFacturalibre] = useState(false);
+  const [resultadoPruebaFacturalibre, setResultadoPruebaFacturalibre] = useState(null);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
 
   const [configTienda, setConfigTienda] = useState({
@@ -79,69 +79,69 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
         impresora_puerto: config.impresora_puerto || 9100,
         modo_negocio: config.modo_negocio || 'ROPA',
       });
-      setNubefactToken(config.nubefact_token || '');
-      setNubefactRuta(config.nubefact_ruta || '');
+      setFacturalibreToken(config.facturalibre_token || '');
+      setFacturalibreRuta(config.facturalibre_ruta || '');
     } catch (error) {
       console.error('Error al cargar configuracion:', error);
     }
   };
 
-  // Valida el FORMATO (no llama a NubeFacT) — evita guardar cosas que
+  // Valida el FORMATO (no llama a FacturaLibre) — evita guardar cosas que
   // claramente no son una ruta/token real, como texto vacío o basura.
-  const validarFormatoNubefact = () => {
-    if (!nubefactRuta.trim() || !nubefactToken.trim()) {
+  const validarFormatoFacturalibre = () => {
+    if (!facturalibreRuta.trim() || !facturalibreToken.trim()) {
       return 'Completa la ruta y el token.';
     }
-    if (!/^https?:\/\/.+/i.test(nubefactRuta.trim())) {
+    if (!/^https?:\/\/.+/i.test(facturalibreRuta.trim())) {
       return 'La ruta debe ser una URL válida (tiene que empezar con http:// o https://).';
     }
-    if (nubefactToken.trim().length < 15) {
-      return 'El token parece incompleto — revisa que lo copiaste entero desde NubeFacT.';
+    if (facturalibreToken.trim().length < 15) {
+      return 'El token parece incompleto — revisa que lo copiaste entero desde tu panel de FacturaLibre.';
     }
     return null;
   };
 
-  const facturacionConfigurada = !!(nubefactToken && nubefactRuta) && !validarFormatoNubefact();
-  const facturacionVerificada = facturacionConfigurada && resultadoPruebaNubefact?.success === true;
+  const facturacionConfigurada = !!(facturalibreToken && facturalibreRuta) && !validarFormatoFacturalibre();
+  const facturacionVerificada = facturacionConfigurada && resultadoPruebaFacturalibre?.success === true;
 
-  const guardarNubefact = async () => {
-    const errorFormato = validarFormatoNubefact();
+  const guardarFacturalibre = async () => {
+    const errorFormato = validarFormatoFacturalibre();
     if (errorFormato) {
       alert(errorFormato);
       return;
     }
-    setGuardandoNubefact(true);
+    setGuardandoFacturalibre(true);
     try {
-      const resultado = await invoke('guardar_token_nubefact', {
-        token: nubefactToken,
-        ruta: nubefactRuta,
+      const resultado = await invoke('guardar_token_facturalibre', {
+        token: facturalibreToken,
+        ruta: facturalibreRuta,
       });
       alert(resultado);
     } catch (error) {
       alert('Error: ' + error);
     } finally {
-      setGuardandoNubefact(false);
+      setGuardandoFacturalibre(false);
     }
   };
 
-  const probarConexionNubefact = async () => {
-    const errorFormato = validarFormatoNubefact();
+  const probarConexionFacturalibre = async () => {
+    const errorFormato = validarFormatoFacturalibre();
     if (errorFormato) {
-      setResultadoPruebaNubefact({ success: false, mensaje: errorFormato });
+      setResultadoPruebaFacturalibre({ success: false, mensaje: errorFormato });
       return;
     }
-    setProbandoNubefact(true);
-    setResultadoPruebaNubefact(null);
+    setProbandoFacturalibre(true);
+    setResultadoPruebaFacturalibre(null);
     try {
-      const resultado = await invoke('probar_credenciales_nubefact', {
-        token: nubefactToken,
-        ruta: nubefactRuta,
+      const resultado = await invoke('probar_credenciales_facturalibre', {
+        token: facturalibreToken,
+        ruta: facturalibreRuta,
       });
-      setResultadoPruebaNubefact(resultado);
+      setResultadoPruebaFacturalibre(resultado);
     } catch (error) {
-      setResultadoPruebaNubefact({ success: false, mensaje: String(error) });
+      setResultadoPruebaFacturalibre({ success: false, mensaje: String(error) });
     } finally {
-      setProbandoNubefact(false);
+      setProbandoFacturalibre(false);
     }
   };
 
@@ -576,7 +576,7 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
 
              
               <p className="facturacion-intro">
-                Conectá tu cuenta de <strong>NubeFacT</strong> (u otro proveedor compatible) para poder
+                Conectá tu cuenta de <strong>FacturaLibre</strong> para poder
                 emitir boletas y facturas electrónicas válidas ante SUNAT directamente desde el Punto de Venta.{' '}
                 {facturacionVerificada ? (
                   <span className="facturacion-estado-badge activo">Configurado y verificado</span>
@@ -586,61 +586,62 @@ function Configuracion({ usuario, onVolver, onLicenciaActualizada }) {
                   <span className="facturacion-estado-badge inactivo">No configurado</span>
                 )}
               </p>
-              {facturacionConfigurada && !facturacionVerificada && !resultadoPruebaNubefact && (
+              {facturacionConfigurada && !facturacionVerificada && !resultadoPruebaFacturalibre && (
                 <div className="facturacion-aviso-sin-probar">
                   El formato de la ruta y el token se ven bien, pero todavía no confirmaste que funcionen de verdad — usa "Probar conexión" antes de dar por hecho que ya puedes emitir boletas o facturas.
                 </div>
               )}
 
               <div className="form-group">
-                <label>Ruta de tu cuenta NubeFacT</label>
+                <label>URL de tu cuenta FacturaLibre</label>
                 <input
                   type="text"
-                  value={nubefactRuta}
-                  onChange={(e) => { setNubefactRuta(e.target.value); setResultadoPruebaNubefact(null); }}
+                  value={facturalibreRuta}
+                  onChange={(e) => { setFacturalibreRuta(e.target.value); setResultadoPruebaFacturalibre(null); }}
 
-                  placeholder="https://api.nubefact.com/api/v1/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  placeholder="https://tuempresa.proapi.facturalibre.org/api/documents"
                 />
-                <small className="form-hint">La encontrás en tu cuenta de NubeFacT "Api (Integración)"</small>
+                <small className="form-hint">La encontrás en tu panel de FacturaLibre, o en la guía "API de Facturación Electrónica" de su base de conocimiento</small>
               </div>
 
               <div className="form-group">
-                <label>Token de tu cuenta NubeFacT</label>
+                <label>Token de tu cuenta FacturaLibre</label>
                 <input
                   type="password"
-                  value={nubefactToken}
-                  onChange={(e) => { setNubefactToken(e.target.value); setResultadoPruebaNubefact(null); }}
+                  value={facturalibreToken}
+                  onChange={(e) => { setFacturalibreToken(e.target.value); setResultadoPruebaFacturalibre(null); }}
                   placeholder="Tu token de acceso"
                 />
+                <small className="form-hint">Está en tu panel de FacturaLibre, en Configuración → Usuarios → Api Token</small>
               </div>
 
               <div className="facturacion-acciones">
                 <button
                   className="btn-guardar-nubefact"
-                  onClick={guardarNubefact}
-                  disabled={guardandoNubefact}
+                  onClick={guardarFacturalibre}
+                  disabled={guardandoFacturalibre}
                 >
-                  {guardandoNubefact ? 'Guardando...' : 'Guardar datos de facturación'}
+                  {guardandoFacturalibre ? 'Guardando...' : 'Guardar datos de facturación'}
                 </button>
                 <button
                   className="btn-probar-nubefact"
-                  onClick={probarConexionNubefact}
-                  disabled={probandoNubefact}
+                  onClick={probarConexionFacturalibre}
+                  disabled={probandoFacturalibre}
                 >
-                  {probandoNubefact ? 'Probando conexión...' : 'Probar conexión'}
+                  {probandoFacturalibre ? 'Probando conexión...' : 'Probar conexión'}
                 </button>
               </div>
 
-              {resultadoPruebaNubefact && (
-                <div className={`facturacion-resultado-prueba ${resultadoPruebaNubefact.success ? 'ok' : 'error'}`}>
-                  {resultadoPruebaNubefact.mensaje}
+              {resultadoPruebaFacturalibre && (
+                <div className={`facturacion-resultado-prueba ${resultadoPruebaFacturalibre.success ? 'ok' : 'error'}`}>
+                  {resultadoPruebaFacturalibre.mensaje}
                 </div>
               )}
 
               <p className="facturacion-nota">
-                Cada negocio necesita su propia cuenta de NubeFacT (con su propio RUC) — no se comparte
-                entre instalaciones distintas. Si todavía no tenés cuenta, podés crear una gratis en{' '}
-                <strong>nubefact.com</strong> para empezar a probar sin costo (modo Demo).
+                Cada negocio necesita su propia cuenta de FacturaLibre (con su propio RUC) — no se comparte
+                entre instalaciones distintas. Las series de boleta y factura (B001 / F001) y el entorno
+                (Demo / Producción) se manejan desde el panel de FacturaLibre, no desde acá.
               </p>
             </div>
           )}

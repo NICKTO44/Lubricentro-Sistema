@@ -11,8 +11,9 @@ pub mod licencias;
 pub mod cajas;
 pub mod proveedores;
 pub mod impresora; // 🆕
-pub mod facturacion; // 🆕 boletas/facturas electrónicas vía NubeFacT
+pub mod facturacion; // 🆕 boletas/facturas electrónicas vía FacturaLibre
 pub mod lotes; // 🆕 control de vencimiento por lotes (minimarket)
+pub mod clientes; // 🆕 registro de clientes fijos, para boleta/factura
 
 pub use auth::{login, test_database_connection};
 pub use productos::{
@@ -49,10 +50,10 @@ pub use configuracion::{
     actualizar_usuario,
     necesita_elegir_modo_negocio,
     establecer_modo_negocio,
-    guardar_token_nubefact,
+    guardar_token_facturalibre,
 };
 // DESPUÉS
-pub use facturacion::{emitir_comprobante_electronico, obtener_comprobantes_de_venta, abrir_url_externa, descargar_pdf_comprobante, probar_credenciales_nubefact}; // 🆕
+pub use facturacion::{emitir_comprobante_electronico, obtener_comprobantes_de_venta, abrir_url_externa, descargar_pdf_comprobante, probar_credenciales_facturalibre}; // 🆕
 pub use lotes::{agregar_lote_producto, obtener_lotes_de_producto, obtener_lotes_por_vencer, descartar_lote}; // 🆕
 pub use devoluciones::{
     buscar_venta_para_devolucion,
@@ -84,3 +85,10 @@ pub use proveedores::{
     obtener_devoluciones_proveedor,
 };
 pub use impresora::{imprimir_boleta, probar_impresora}; // 🆕
+pub use clientes::{
+    obtener_clientes,
+    buscar_clientes,
+    agregar_cliente,
+    actualizar_cliente,
+    eliminar_cliente,
+}; // 🆕

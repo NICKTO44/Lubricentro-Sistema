@@ -104,8 +104,23 @@ pub fn database_exists(db_path: &str) -> bool {
         return false;
     }
     if let Ok(conn) = Connection::open(db_path) {
-        if let Ok(mut stmt) = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'") {
-            return stmt.exists([]).unwrap_or(false);
+        // 🩹 A propósito MUY conservador: si el archivo ya tiene aunque sea
+        // una sola tabla creada, se trata como base de datos EXISTENTE y
+        // jamás se reinicializa con el schema completo (schema_sqlite.sql
+        // empieza cada tabla con "DROP TABLE IF EXISTS ... ; CREATE TABLE
+        // ..." — eso borra TODO, incluidos productos/ventas/clientes
+        // reales). Antes este chequeo solo miraba si existía la tabla
+        // 'usuarios': si una instalación vieja no la tenía por el motivo
+        // que sea, el sistema la trataba como "base nueva" y corría el
+        // schema completo encima, dejando en blanco el inventario de un
+        // negocio que ya estaba trabajando. Bug reportado 2026-08-24 — ver
+        // la migración de abajo en run_migrations() que crea 'usuarios' /
+        // 'roles' / 'sesiones_log' de forma aditiva si llegaran a faltar.
+        if let Ok(mut stmt) = conn.prepare(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        ) {
+            let total_tablas: i64 = stmt.query_row([], |row| row.get(0)).unwrap_or(0);
+            return total_tablas > 0;
         }
     }
     false
@@ -113,6 +128,91 @@ pub fn database_exists(db_path: &str) -> bool {
 
 pub fn run_migrations(db_path: &str) -> Result<()> {
     let conn = Connection::open(db_path)?;
+
+    // 🩹 Migración de seguridad (2026-08-24): red de contención para el bug
+    // de reinicio de datos descrito arriba en database_exists(). Si por
+    // cualquier motivo una base de datos existente (con productos/ventas
+    // reales) nunca tuvo las tablas de usuarios/roles, se crean acá de
+    // forma ADITIVA — CREATE TABLE IF NOT EXISTS, nunca DROP — para no
+    // tocar nada de lo demás. Si hay que crear 'usuarios' desde cero, se
+    // siembra con los mismos 3 usuarios por defecto (admin/cajero/
+    // almacenista) que trae una instalación nueva, para no dejar al
+    // negocio sin forma de entrar al sistema.
+    let has_roles: bool = conn
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='roles'")?
+        .exists([])?;
+    if !has_roles {
+        println!("Migracion de seguridad: creando tabla roles (faltaba)...");
+        conn.execute_batch(r#"
+            CREATE TABLE IF NOT EXISTS roles (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              nombre TEXT NOT NULL UNIQUE,
+              descripcion TEXT,
+              permisos TEXT,
+              activo INTEGER DEFAULT 1,
+              fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),
+              fecha_actualizacion TEXT DEFAULT (datetime('now', 'localtime'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_roles_nombre ON roles(nombre);
+            CREATE INDEX IF NOT EXISTS idx_roles_activo ON roles(activo);
+            INSERT INTO roles (nombre, descripcion, permisos, activo) VALUES
+            ('Administrador', 'Acceso total al sistema', '{"ventas": true, "inventario": true, "reportes": true, "usuarios": true}', 1),
+            ('Cajero',        'Procesar ventas',          '{"ventas": true, "inventario": false}', 1),
+            ('Almacenista',   'Gestionar inventario',     '{"ventas": false, "inventario": true}', 1);
+        "#)?;
+    }
+
+    let has_usuarios: bool = conn
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'")?
+        .exists([])?;
+    if !has_usuarios {
+        println!("Migracion de seguridad: creando tabla usuarios (faltaba)...");
+        conn.execute_batch(r#"
+            CREATE TABLE IF NOT EXISTS usuarios (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              username TEXT NOT NULL UNIQUE,
+              password_hash TEXT NOT NULL,
+              nombre_completo TEXT NOT NULL,
+              email TEXT,
+              rol_id INTEGER NOT NULL,
+              activo INTEGER DEFAULT 1,
+              intentos_fallidos INTEGER DEFAULT 0,
+              bloqueado_hasta TEXT,
+              ultimo_acceso TEXT,
+              fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),
+              fecha_actualizacion TEXT DEFAULT (datetime('now', 'localtime')),
+              FOREIGN KEY (rol_id) REFERENCES roles(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_usuarios_username ON usuarios(username);
+            CREATE INDEX IF NOT EXISTS idx_usuarios_activo ON usuarios(activo);
+            CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol_id);
+            INSERT INTO usuarios (username, password_hash, nombre_completo, email, rol_id, activo) VALUES
+            ('admin',       '$2b$12$mGLz/PA90wpJCJq.nFrBUeDhHFzjFdZE5bGanh/YGoKxBjDJbJbpC', 'Administrador General', 'admin@sistema.com',       1, 1),
+            ('cajero',      '$2b$12$4HKxiG5rPcijikGrlyc2qOdRvlLsn7GNClq1FpXuNZOx8C.a3Ne.C', 'Cajero Principal',      'cajero@sistema.com',      2, 1),
+            ('almacenista', '$2b$12$oWJoeuWj3BvBwu20koXzXOqFGccaMduytF03Q1812mPeg60q/1HQC', 'Almacenista',           'almacenista@sistema.com', 3, 1);
+        "#)?;
+    }
+
+    let has_sesiones_log: bool = conn
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='sesiones_log'")?
+        .exists([])?;
+    if !has_sesiones_log {
+        println!("Migracion de seguridad: creando tabla sesiones_log (faltaba)...");
+        conn.execute_batch(r#"
+            CREATE TABLE IF NOT EXISTS sesiones_log (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              usuario_id INTEGER NOT NULL,
+              fecha_hora TEXT DEFAULT (datetime('now', 'localtime')),
+              ip_address TEXT,
+              user_agent TEXT,
+              resultado TEXT NOT NULL CHECK(resultado IN ('EXITOSO', 'FALLIDO', 'BLOQUEADO')),
+              motivo_fallo TEXT,
+              FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_sesiones_usuario ON sesiones_log(usuario_id);
+            CREATE INDEX IF NOT EXISTS idx_sesiones_fecha ON sesiones_log(fecha_hora);
+        "#)?;
+    }
 
     // Migración: tabla licencias
     let has_licencias: bool = conn
@@ -253,6 +353,39 @@ pub fn run_migrations(db_path: &str) -> Result<()> {
         println!("Agregando columna nubefact_ruta a configuracion_tienda...");
         conn.execute("ALTER TABLE configuracion_tienda ADD COLUMN nubefact_ruta TEXT", [])?;
         println!("Columna nubefact_ruta agregada");
+    }
+
+    // 🆕 Migración: columna facturalibre_token en configuracion_tienda
+    // (reemplaza a NubeFacT como proveedor de facturación electrónica — las
+    // columnas nubefact_token/nubefact_ruta de arriba se dejan intactas, sin
+    // usarse, para no romper instalaciones que ya tenían datos ahí)
+    let has_facturalibre_token: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('configuracion_tienda') WHERE name='facturalibre_token'",
+            [],
+            |row| Ok(row.get::<_, i32>(0)? > 0),
+        )
+        .unwrap_or(false);
+
+    if !has_facturalibre_token {
+        println!("Agregando columna facturalibre_token a configuracion_tienda...");
+        conn.execute("ALTER TABLE configuracion_tienda ADD COLUMN facturalibre_token TEXT", [])?;
+        println!("Columna facturalibre_token agregada");
+    }
+
+    // 🆕 Migración: columna facturalibre_ruta en configuracion_tienda
+    let has_facturalibre_ruta: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('configuracion_tienda') WHERE name='facturalibre_ruta'",
+            [],
+            |row| Ok(row.get::<_, i32>(0)? > 0),
+        )
+        .unwrap_or(false);
+
+    if !has_facturalibre_ruta {
+        println!("Agregando columna facturalibre_ruta a configuracion_tienda...");
+        conn.execute("ALTER TABLE configuracion_tienda ADD COLUMN facturalibre_ruta TEXT", [])?;
+        println!("Columna facturalibre_ruta agregada");
     }
 
     // 🆕 Migración: columna precio en producto_variantes (precio propio por talla)
@@ -518,10 +651,13 @@ pub fn run_migrations(db_path: &str) -> Result<()> {
                 numero INTEGER,
                 cliente_documento TEXT,
                 cliente_nombre TEXT,
-                estado TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'ACEPTADO', 'RECHAZADO', 'ERROR')),
+                estado TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'ACEPTADO', 'OBSERVADO', 'RECHAZADO', 'ERROR')),
                 mensaje_sunat TEXT,
                 enlace_pdf TEXT,
                 enlace_xml TEXT,
+                enlace_cdr TEXT,
+                external_id TEXT,
+                hash TEXT,
                 fecha_emision TEXT DEFAULT (datetime('now', 'localtime')),
                 FOREIGN KEY (venta_id) REFERENCES ventas(id)
             )",
@@ -770,6 +906,80 @@ if !sql_productos.contains("'METRO'") {
         // confusos más tarde, en pleno uso, al intentar abrir caja). Mejor
         // que falle fuerte y claro acá mismo, al inicio.
         panic!("Migración crítica de cajas falló, la app no puede continuar: {}", e);
+    }
+
+    // =====================================================
+    // 🆕 Migración: tabla clientes
+    // Registro de clientes fijos del lubricentro, para reutilizar sus
+    // datos al emitir boleta/factura/comprobante sin volver a escribirlos.
+    // =====================================================
+    let has_clientes: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='clientes'",
+            [],
+            |row| Ok(row.get::<_, i32>(0)? > 0),
+        )
+        .unwrap_or(false);
+
+    if !has_clientes {
+        println!("Creando tabla clientes...");
+        conn.execute_batch(
+            "CREATE TABLE clientes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL,
+                tipo_documento TEXT DEFAULT 'DNI' CHECK(tipo_documento IN ('DNI', 'RUC', 'NINGUNO')),
+                numero_documento TEXT,
+                telefono TEXT,
+                email TEXT,
+                direccion TEXT,
+                notas TEXT,
+                activo INTEGER DEFAULT 1,
+                fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),
+                fecha_actualizacion TEXT DEFAULT (datetime('now', 'localtime'))
+             );
+             CREATE INDEX idx_clientes_nombre ON clientes(nombre);
+             CREATE INDEX idx_clientes_documento ON clientes(numero_documento);
+             CREATE INDEX idx_clientes_activo ON clientes(activo);"
+        )?;
+        println!("Tabla clientes creada");
+    }
+
+    // 🆕 Migración: columna cliente_id en comprobantes_electronicos (referencia
+    // opcional al cliente guardado que se usó para emitir el comprobante)
+    let has_cliente_id_comprobante: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('comprobantes_electronicos') WHERE name='cliente_id'",
+            [],
+            |row| Ok(row.get::<_, i32>(0)? > 0),
+        )
+        .unwrap_or(false);
+
+    if !has_cliente_id_comprobante {
+        println!("Agregando columna cliente_id a comprobantes_electronicos...");
+        conn.execute("ALTER TABLE comprobantes_electronicos ADD COLUMN cliente_id INTEGER", [])?;
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_comprobantes_cliente ON comprobantes_electronicos(cliente_id)", [])?;
+        println!("Columna cliente_id agregada");
+    }
+
+    // 🆕 Migración: columnas de la respuesta de FacturaLibre en comprobantes_electronicos
+    // (external_id para reenvíos/consultas, hash del comprobante, y el link al CDR)
+    for (columna, tipo) in [("external_id", "TEXT"), ("hash", "TEXT"), ("enlace_cdr", "TEXT")] {
+        let existe: bool = conn
+            .query_row(
+                &format!("SELECT COUNT(*) FROM pragma_table_info('comprobantes_electronicos') WHERE name='{}'", columna),
+                [],
+                |row| Ok(row.get::<_, i32>(0)? > 0),
+            )
+            .unwrap_or(false);
+
+        if !existe {
+            println!("Agregando columna {} a comprobantes_electronicos...", columna);
+            conn.execute(
+                &format!("ALTER TABLE comprobantes_electronicos ADD COLUMN {} {}", columna, tipo),
+                [],
+            )?;
+            println!("Columna {} agregada", columna);
+        }
     }
 
     println!("Base de datos actualizada");

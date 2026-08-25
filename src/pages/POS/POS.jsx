@@ -13,7 +13,6 @@ function POS({ usuario, onVolver, modoSoloLectura }) {
   const [buscando, setBuscando] = useState(false);
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [montoRecibido, setMontoRecibido] = useState('');
-  const [procesando, setProcesando] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [mostrarRecibo, setMostrarRecibo] = useState(false);
   const [datosVenta, setDatosVenta] = useState(null);
@@ -21,6 +20,11 @@ function POS({ usuario, onVolver, modoSoloLectura }) {
   const [tipoComprobanteElegido, setTipoComprobanteElegido] = useState(null); // null | 'BOLETA' | 'FACTURA'
   const [documentoCliente, setDocumentoCliente] = useState('');
   const [nombreCliente, setNombreCliente] = useState('');
+  // 🆕 Selector de cliente guardado (para no escribir DNI/RUC a mano cada vez)
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null); // cliente elegido de la lista, o null
+  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [resultadosClientes, setResultadosClientes] = useState([]);
+  const [dropdownClienteVisible, setDropdownClienteVisible] = useState(false);
   const [emitiendoComprobante, setEmitiendoComprobante] = useState(false);
   const [resultadoComprobante, setResultadoComprobante] = useState(null); // { success, mensaje, enlace_pdf }
   const [modalVistaPreviaComprobante, setModalVistaPreviaComprobante] = useState(null); // { dataUri } | 'cargando' | 'error'
@@ -48,7 +52,7 @@ function POS({ usuario, onVolver, modoSoloLectura }) {
   const verificarFacturacionConfigurada = async () => {
     try {
       const config = await invoke('obtener_configuracion_tienda');
-      const tieneCredenciales = !!(config?.nubefact_token && config.nubefact_token.trim() && config?.nubefact_ruta && config.nubefact_ruta.trim());
+      const tieneCredenciales = !!(config?.facturalibre_token && config.facturalibre_token.trim() && config?.facturalibre_ruta && config.facturalibre_ruta.trim());
       setFacturacionConfigurada(tieneCredenciales);
     } catch (error) {
       console.error('Error al verificar configuración de facturación:', error);
@@ -203,43 +207,158 @@ const getStockTexto = (stock, unidadMedida) => {
     setDocumentoCliente('');
     setNombreCliente('');
     setResultadoComprobante(null);
+    setClienteSeleccionado(null);
+    setBusquedaCliente('');
+    setResultadosClientes([]);
+    setDropdownClienteVisible(false);
     if (!yaTieneComprobanteReal) {
       setMostrarRecibo(true);
     }
   };
 
-  const emitirComprobante = async () => {
-    if (!modalComprobante || !tipoComprobanteElegido) return;
-
-    const doc = documentoCliente.trim();
-    if (tipoComprobanteElegido === 'FACTURA' && doc.length !== 11) {
-      mostrarMensaje('error', 'La factura necesita un RUC de 11 dígitos');
+  // 🆕 Buscar clientes guardados por nombre o documento, para autocompletar
+  // los datos del comprobante sin tener que escribirlos a mano
+  const buscarClientes = async (texto) => {
+    setBusquedaCliente(texto);
+    setClienteSeleccionado(null);
+    if (!texto.trim()) {
+      setResultadosClientes([]);
+      setDropdownClienteVisible(false);
       return;
     }
-    if (tipoComprobanteElegido === 'BOLETA' && doc && doc.length !== 8) {
-      mostrarMensaje('error', 'El DNI debe tener 8 dígitos');
-      return;
+    try {
+      const res = await invoke('buscar_clientes', { texto });
+      setResultadosClientes(res.clientes || []);
+      setDropdownClienteVisible(true);
+    } catch (error) {
+      console.error('Error al buscar clientes:', error);
+    }
+  };
+
+  const seleccionarClienteComprobante = (cliente) => {
+    setClienteSeleccionado(cliente);
+    setBusquedaCliente(cliente.nombre);
+    setDropdownClienteVisible(false);
+    setDocumentoCliente(cliente.numero_documento || '');
+    setNombreCliente(cliente.nombre || '');
+  };
+
+  const quitarClienteSeleccionado = () => {
+    setClienteSeleccionado(null);
+    setBusquedaCliente('');
+    setResultadosClientes([]);
+    setDocumentoCliente('');
+    setNombreCliente('');
+  };
+
+  // 🆕 La venta recién se guarda acá — cuando el cajero confirma "Continuar"
+  // (sin comprobante) o "Emitir Boleta/Factura". Hasta este punto no se tocó
+  // la base de datos ni el stock, así que "Editar" y "Cancelar" pueden
+  // simplemente descartar todo sin dejar nada a medias.
+  const confirmarComprobante = async () => {
+    if (!modalComprobante) return;
+
+    if (tipoComprobanteElegido) {
+      const doc = documentoCliente.trim();
+      if (tipoComprobanteElegido === 'FACTURA' && doc.length !== 11) {
+        mostrarMensaje('error', 'La factura necesita un RUC de 11 dígitos');
+        return;
+      }
+      if (tipoComprobanteElegido === 'BOLETA' && doc && doc.length !== 8) {
+        mostrarMensaje('error', 'El DNI debe tener 8 dígitos');
+        return;
+      }
     }
 
     setEmitiendoComprobante(true);
-    setResultadoComprobante(null);
-    try {
-      const resultado = await invoke('emitir_comprobante_electronico', {
-        request: {
-          venta_id: modalComprobante.ventaId,
-          tipo: tipoComprobanteElegido,
-          cliente_documento: doc || null,
-          cliente_nombre: nombreCliente.trim() || null,
-          items: modalComprobante.items,
-          total: modalComprobante.total,
-        },
-      });
-      setResultadoComprobante(resultado);
-    } catch (error) {
-      setResultadoComprobante({ success: false, mensaje: String(error) });
-    } finally {
-      setEmitiendoComprobante(false);
+
+    // 1. Guardar la venta recién ahora, si todavía no se guardó (por ejemplo,
+    // si esto es un reintento tras corregir el documento, la venta ya existe
+    // y no hay que volver a crearla)
+    let ventaId = modalComprobante.ventaId;
+    if (!ventaId) {
+      try {
+        const resultado = await invoke('procesar_venta', {
+          ...modalComprobante.datosVenta,
+          usuarioId: usuario.id,
+        });
+        ventaId = resultado.venta_id;
+        setDatosVenta({ ...modalComprobante.ventaParaRecibo, folio: resultado.folio });
+        setModalComprobante(prev => (prev ? { ...prev, ventaId } : prev));
+        setCarrito([]);
+        setMontoRecibido('');
+        setCodigoBuscar('');
+        cargarProductos();
+        mostrarMensaje('success', 'Venta procesada exitosamente');
+      } catch (error) {
+        console.error('Error al procesar venta:', error);
+        mostrarMensaje('error', `${error}`);
+        setEmitiendoComprobante(false);
+        return; // el carrito sigue intacto — el cajero puede Editar y corregir
+      }
     }
+
+    // 2. Si eligió Boleta/Factura, emitir el comprobante contra esa venta
+    if (tipoComprobanteElegido) {
+      setResultadoComprobante(null);
+      try {
+        const doc = documentoCliente.trim();
+        const resultado = await invoke('emitir_comprobante_electronico', {
+          request: {
+            venta_id: ventaId,
+            tipo: tipoComprobanteElegido,
+            cliente_id: clienteSeleccionado?.id || null,
+            cliente_documento: doc || null,
+            cliente_nombre: nombreCliente.trim() || null,
+            items: modalComprobante.items,
+            total: modalComprobante.total,
+          },
+        });
+        setResultadoComprobante(resultado);
+      } catch (error) {
+        setResultadoComprobante({ success: false, mensaje: String(error) });
+      } finally {
+        setEmitiendoComprobante(false);
+      }
+    } else {
+      // Sin comprobante: la venta ya quedó guardada, mostramos el recibo interno
+      setEmitiendoComprobante(false);
+      cerrarModalComprobante();
+    }
+  };
+
+  // 🆕 "Editar": todavía no se guardó nada en la base de datos — el carrito
+  // sigue intacto, así que solo hace falta cerrar el modal y volver al POS.
+  const editarVenta = () => {
+    if (modalComprobante?.ventaId) return; // salvaguarda: la venta ya se guardó, no corresponde "editar"
+    setModalComprobante(null);
+    setTipoComprobanteElegido(null);
+    setDocumentoCliente('');
+    setNombreCliente('');
+    setClienteSeleccionado(null);
+    setBusquedaCliente('');
+    setResultadosClientes([]);
+    setDropdownClienteVisible(false);
+    inputCodigoRef.current?.focus();
+  };
+
+  // 🆕 "Cancelar": aborta la venta antes de guardarla — como todavía no se
+  // tocó la base de datos ni el stock, alcanza con vaciar el carrito.
+  const cancelarVenta = () => {
+    if (modalComprobante?.ventaId) return; // salvaguarda: la venta ya se guardó, no corresponde cancelarla así
+    setCarrito([]);
+    setMontoRecibido('');
+    setCodigoBuscar('');
+    setModalComprobante(null);
+    setTipoComprobanteElegido(null);
+    setDocumentoCliente('');
+    setNombreCliente('');
+    setClienteSeleccionado(null);
+    setBusquedaCliente('');
+    setResultadosClientes([]);
+    setDropdownClienteVisible(false);
+    mostrarMensaje('success', 'Venta cancelada');
+    inputCodigoRef.current?.focus();
   };
 
   const confirmarCantidadPeso = () => {
@@ -412,44 +531,50 @@ const getStockTexto = (stock, unidadMedida) => {
     return (parseFloat(montoRecibido) || 0) - calcularTotal();
   };
 
-  const procesarVenta = async () => {
+  // 🆕 Abre el modal "¿Con qué comprobante?" con una FOTO del carrito y del
+  // pago — todavía no se guarda nada en la base de datos ni se toca el
+  // stock. Eso recién pasa en confirmarComprobante(), cuando el cajero
+  // confirma con "Continuar" o "Emitir Boleta/Factura". Así, mientras tanto,
+  // "Editar" y "Cancelar" pueden actuar sin dejar nada a medio guardar.
+  const iniciarCheckout = () => {
     if (modoSoloLectura) { mostrarMensaje('error', 'Activa tu licencia para procesar ventas'); return; }
     if (carrito.length === 0) { mostrarMensaje('error', 'El carrito está vacío'); return; }
     if (metodoPago === 'EFECTIVO' && (parseFloat(montoRecibido) || 0) < calcularTotal()) {
       mostrarMensaje('error', 'Monto insuficiente'); return;
     }
 
-    setProcesando(true);
-    try {
-      // 🆕 Incluir variante_id y talla en cada producto, y el descuento en soles
-      const productosVenta = carrito.map(item => ({
-        id: item.id,
-        nombre: item.nombre,
-        codigo: item.codigo,
-        precio: item.precio,
-        cantidad: item.cantidad,
-        descuentoMonto: item.descuento_monto || 0,
-        varianteId: item.variante_id || null,
-        talla: item.talla || null,
-      }));
+    // 🆕 Incluir variante_id y talla en cada producto, y el descuento en soles
+    const productosVenta = carrito.map(item => ({
+      id: item.id,
+      nombre: item.nombre,
+      codigo: item.codigo,
+      precio: item.precio,
+      cantidad: item.cantidad,
+      descuentoMonto: item.descuento_monto || 0,
+      varianteId: item.variante_id || null,
+      talla: item.talla || null,
+    }));
 
-      const resultado = await invoke('procesar_venta', {
+    const total = calcularTotal();
+    const montoRecibidoNum = metodoPago === 'EFECTIVO' ? parseFloat(montoRecibido) : null;
+    const cambio = metodoPago === 'EFECTIVO' ? calcularCambio() : null;
+
+    setModalComprobante({
+      ventaId: null, // se completa recién al confirmar
+      datosVenta: {
         productos: productosVenta,
-        total: calcularTotal(),
+        total,
         metodoPago,
-        montoRecibido: metodoPago === 'EFECTIVO' ? parseFloat(montoRecibido) : null,
-        cambio: metodoPago === 'EFECTIVO' ? calcularCambio() : null,
-        usuarioId: usuario.id,
-      });
-
-      const ventaParaRecibo = {
-        folio: resultado.folio,
+        montoRecibido: montoRecibidoNum,
+        cambio,
+      },
+      ventaParaRecibo: {
         subtotal: calcularSubtotal(),
         descuento: calcularDescuentoTotal(),
-        total: calcularTotal(),
+        total,
         metodoPago,
-        montoRecibido: metodoPago === 'EFECTIVO' ? parseFloat(montoRecibido) : 0,
-        cambio: metodoPago === 'EFECTIVO' ? calcularCambio() : 0,
+        montoRecibido: montoRecibidoNum || 0,
+        cambio: cambio || 0,
         cajero: usuario.nombre_completo,
         productos: carrito.map(item => ({
           nombre: item.nombre + (item.talla ? ` (${item.talla})` : ''),
@@ -458,33 +583,16 @@ const getStockTexto = (stock, unidadMedida) => {
           precio: item.precio,
           descuento: item.descuento_monto || 0,
         })),
-      };
-
-      setDatosVenta(ventaParaRecibo);
-      // 🆕 Antes de mostrar el recibo, preguntamos si quiere Boleta/Factura/Sin comprobante
-      setModalComprobante({
-        ventaId: resultado.venta_id,
-        items: carrito.map(item => ({
-          codigo: item.codigo,
-          descripcion: item.nombre + (item.talla ? ` (${item.talla})` : ''),
-          cantidad: item.cantidad,
-          precio_unitario: item.precio,
-          unidad_medida: item.unidad_medida || 'UNIDAD',
-        })),
-        total: calcularTotal(),
-      });
-      setCarrito([]);
-      setMontoRecibido('');
-      setCodigoBuscar('');
-      await cargarProductos();
-      mostrarMensaje('success', 'Venta procesada exitosamente');
-    } catch (error) {
-      console.error('Error al procesar venta:', error);
-      mostrarMensaje('error', `${error}`);
-    } finally {
-      setProcesando(false);
-      inputCodigoRef.current?.focus();
-    }
+      },
+      items: carrito.map(item => ({
+        codigo: item.codigo,
+        descripcion: item.nombre + (item.talla ? ` (${item.talla})` : ''),
+        cantidad: item.cantidad,
+        precio_unitario: item.precio,
+        unidad_medida: item.unidad_medida || 'UNIDAD',
+      })),
+      total,
+    });
   };
 
   const mostrarMensaje = (tipo, texto) => {
@@ -812,11 +920,11 @@ const getStockTexto = (stock, unidadMedida) => {
               disabled={carrito.length === 0 || modoSoloLectura}
             >Limpiar</button>
             <button
-              onClick={procesarVenta}
+              onClick={iniciarCheckout}
               className="btn-procesar"
-              disabled={carrito.length === 0 || procesando || modoSoloLectura}
+              disabled={carrito.length === 0 || modoSoloLectura}
             >
-              {procesando ? 'Procesando...' : modoSoloLectura ? 'Licencia Expirada' : 'Procesar Venta'}
+              {modoSoloLectura ? 'Licencia Expirada' : 'Procesar Venta'}
             </button>
           </div>
         </div>
@@ -934,6 +1042,34 @@ const getStockTexto = (stock, unidadMedida) => {
 
                 {tipoComprobanteElegido && (
                   <div className="comprobante-datos-cliente">
+                    {/* 🆕 Buscar un cliente ya registrado, para no escribir sus datos a mano */}
+                    <div className="buscador-cliente-wrap">
+                      <input
+                        type="text"
+                        className="buscador-cliente-input"
+                        placeholder="Buscar cliente guardado por nombre o documento..."
+                        value={busquedaCliente}
+                        onChange={(e) => buscarClientes(e.target.value)}
+                        onFocus={() => { if (resultadosClientes.length > 0) setDropdownClienteVisible(true); }}
+                      />
+                      {clienteSeleccionado && (
+                        <button type="button" className="btn-quitar-cliente" onClick={quitarClienteSeleccionado} title="Quitar cliente">×</button>
+                      )}
+                      {dropdownClienteVisible && resultadosClientes.length > 0 && (
+                        <div className="dropdown-clientes">
+                          {resultadosClientes.map((c) => (
+                            <div key={c.id} className="dropdown-cliente-item" onClick={() => seleccionarClienteComprobante(c)}>
+                              <span className="dropdown-cliente-nombre">{c.nombre}</span>
+                              <span className="dropdown-cliente-doc">{c.tipo_documento} {c.numero_documento || ''}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {clienteSeleccionado && (
+                        <div className="chip-cliente-elegido">Cliente seleccionado: {clienteSeleccionado.nombre}</div>
+                      )}
+                    </div>
+
                     <input
                       type="text"
                       placeholder={tipoComprobanteElegido === 'FACTURA' ? 'RUC (11 dígitos)' : 'DNI (opcional)'}
@@ -954,16 +1090,35 @@ const getStockTexto = (stock, unidadMedida) => {
                   {tipoComprobanteElegido ? (
                     <button
                       className="btn-emitir-comprobante"
-                      onClick={emitirComprobante}
+                      onClick={confirmarComprobante}
                       disabled={emitiendoComprobante}
                     >
                       {emitiendoComprobante ? 'Emitiendo...' : `Emitir ${tipoComprobanteElegido === 'BOLETA' ? 'Boleta' : 'Factura'}`}
                     </button>
                   ) : (
-                    <button className="btn-emitir-comprobante" onClick={cerrarModalComprobante}>
-                      Continuar
+                    <button className="btn-emitir-comprobante" onClick={confirmarComprobante} disabled={emitiendoComprobante}>
+                      {emitiendoComprobante ? 'Procesando...' : 'Continuar'}
                     </button>
                   )}
+                </div>
+
+                {/* 🆕 Todavía no se guardó la venta en este punto — Editar vuelve
+                    al carrito tal cual estaba, Cancelar lo descarta por completo */}
+                <div className="comprobante-acciones-secundarias">
+                  <button
+                    className="btn-editar-venta"
+                    onClick={editarVenta}
+                    disabled={emitiendoComprobante}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="btn-cancelar-venta"
+                    onClick={cancelarVenta}
+                    disabled={emitiendoComprobante}
+                  >
+                    Cancelar
+                  </button>
                 </div>
               </>
             )}

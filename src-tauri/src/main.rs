@@ -78,8 +78,8 @@ fn main() {
             // Configuración
             obtener_configuracion_tienda,
             actualizar_configuracion_tienda,
-            guardar_token_nubefact,
-            probar_credenciales_nubefact,
+            guardar_token_facturalibre,
+            probar_credenciales_facturalibre,
             emitir_comprobante_electronico,
             obtener_comprobantes_de_venta,
             abrir_url_externa,
@@ -141,6 +141,13 @@ fn main() {
             // 🆕 Impresora
             imprimir_boleta,
             probar_impresora,
+
+            // 🆕 Clientes
+            obtener_clientes,
+            buscar_clientes,
+            agregar_cliente,
+            actualizar_cliente,
+            eliminar_cliente,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

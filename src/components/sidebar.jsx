@@ -12,8 +12,9 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconLogout,
+  IconUsers,
 } from '@tabler/icons-react';
-import './Sidebar.css';
+import './sidebar.css';
 
 function Sidebar({ 
   moduloActual, 
@@ -45,6 +46,13 @@ function Sidebar({
       nombre: 'Caja',
       icono: IconWallet,
       descripcion: 'Control de caja',
+      roles: [1, 2] // Administrador y Cajero
+    },
+    {
+      id: 'clientes',
+      nombre: 'Clientes',
+      icono: IconUsers,
+      descripcion: 'Registro de clientes',
       roles: [1, 2] // Administrador y Cajero
     },
     {
