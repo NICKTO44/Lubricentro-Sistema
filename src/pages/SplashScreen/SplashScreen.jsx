@@ -184,7 +184,7 @@ const SplashScreen = ({
 
           {/* Versión del sistema */}
           <div className="splash-version">
-            Sistema de Gestión POS v1.1.3
+            Sistema de Gestión POS v1.1.5
           </div>
         </div>
       </div>

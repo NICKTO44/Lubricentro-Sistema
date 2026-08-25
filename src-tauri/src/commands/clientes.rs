@@ -14,14 +14,15 @@ fn row_to_cliente(row: &rusqlite::Row) -> rusqlite::Result<Cliente> {
         telefono:         row.get(4)?,
         email:            row.get(5)?,
         direccion:        row.get(6)?,
-        notas:            row.get(7)?,
-        activo:           row.get::<_, i32>(8)? == 1,
+        placa:            row.get(7)?,
+        notas:            row.get(8)?,
+        activo:           row.get::<_, i32>(9)? == 1,
     })
 }
 
 const SELECT_CLIENTE: &str = r"
     SELECT id, nombre, tipo_documento, numero_documento,
-           telefono, email, direccion, notas, activo
+           telefono, email, direccion, placa, notas, activo
     FROM clientes
 ";
 
@@ -88,8 +89,8 @@ pub fn agregar_cliente(
 
     match conn.execute(
         r"INSERT INTO clientes
-            (nombre, tipo_documento, numero_documento, telefono, email, direccion, notas)
-          VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (nombre, tipo_documento, numero_documento, telefono, email, direccion, placa, notas)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         params![
             cliente.nombre.trim(),
             cliente.tipo_documento.as_deref().unwrap_or("DNI"),
@@ -97,6 +98,7 @@ pub fn agregar_cliente(
             &cliente.telefono,
             &cliente.email,
             &cliente.direccion,
+            &cliente.placa,
             &cliente.notas,
         ],
     ) {
@@ -132,7 +134,7 @@ pub fn actualizar_cliente(
     match conn.execute(
         r"UPDATE clientes SET
             nombre = ?, tipo_documento = ?, numero_documento = ?,
-            telefono = ?, email = ?, direccion = ?, notas = ?,
+            telefono = ?, email = ?, direccion = ?, placa = ?, notas = ?,
             fecha_actualizacion = datetime('now', 'localtime')
           WHERE id = ?",
         params![
@@ -142,6 +144,7 @@ pub fn actualizar_cliente(
             &cliente.telefono,
             &cliente.email,
             &cliente.direccion,
+            &cliente.placa,
             &cliente.notas,
             cliente_id,
         ],

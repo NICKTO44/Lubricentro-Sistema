@@ -243,9 +243,34 @@ body {
   color: var(--muted);
   letter-spacing: 0.02em;
   text-transform: none;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+/* 🆕 Encabezado de "Productos Disponibles" + botón de refresco */
+.lista-productos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
   flex-shrink: 0;
 }
+
+.btn-actualizar-pos {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #3B82F6;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-actualizar-pos:hover { background: #2563EB; }
+.btn-actualizar-pos:disabled { background: #93C5FD; cursor: not-allowed; }
 
 /* =====================================================
    GRID DE TARJETAS
@@ -1199,18 +1224,35 @@ body {
 
 .comprobante-datos-cliente input:focus { outline: none; border-color: #22c55e; }
 
-/* 🆕 Buscador de cliente guardado, dentro del modal de comprobante */
+/* 🆕 Buscador de cliente guardado, dentro del modal de comprobante.
+   Diseño a propósito MUY distinto de los inputs de relleno de más abajo
+   (fondo celeste, ícono de lupa, borde punteado) — para que el cajero
+   entienda de un vistazo "esto busca, no es un campo para escribir datos
+   nuevos", y no se confunda pensando que tiene que llenarlo siempre. */
+.buscador-cliente-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin-bottom: -2px;
+}
+
 .buscador-cliente-wrap { position: relative; }
 
 .buscador-cliente-input {
   width: 100%;
-  padding: 11px 34px 11px 14px;
-  border: 1.5px solid #e5e7eb;
+  padding: 11px 34px 11px 36px;
+  border: 1.5px dashed #93c5fd;
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
+  background-color: #eff6ff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d4ed8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+  background-size: 15px 15px;
 }
-.buscador-cliente-input:focus { outline: none; border-color: #22c55e; }
+.buscador-cliente-input::placeholder { color: #60a5fa; }
+.buscador-cliente-input:focus { outline: none; border-style: solid; border-color: #2563eb; }
 
 .btn-quitar-cliente {
   position: absolute;

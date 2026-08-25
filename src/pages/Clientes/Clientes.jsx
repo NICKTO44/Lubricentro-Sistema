@@ -91,6 +91,7 @@ function Clientes({ usuario, modoSoloLectura }) {
                   <th>Teléfono</th>
                   <th>Email</th>
                   <th>Dirección</th>
+                  <th>Placa</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -105,6 +106,7 @@ function Clientes({ usuario, modoSoloLectura }) {
                     <td>{c.telefono || '—'}</td>
                     <td>{c.email || '—'}</td>
                     <td className="direccion-cell">{c.direccion || '—'}</td>
+                    <td>{c.placa || '—'}</td>
                     <td className="acciones-cell">
                       <button className="btn-editar-cli" onClick={() => { setClienteEditar(c); setModalForm(true); }}>Editar</button>
                       {!modoSoloLectura && (
@@ -140,6 +142,7 @@ function ModalFormCliente({ cliente, onClose, onSuccess, onError }) {
     telefono:         cliente?.telefono || '',
     email:            cliente?.email || '',
     direccion:        cliente?.direccion || '',
+    placa:            cliente?.placa || '',
     notas:            cliente?.notas || '',
   });
   const [guardando, setGuardando] = useState(false);
@@ -216,6 +219,15 @@ function ModalFormCliente({ cliente, onClose, onSuccess, onError }) {
             <div className="form-group full">
               <label>Dirección</label>
               <input value={form.direccion} onChange={e => handleChange('direccion', e.target.value)} placeholder="Av. Principal 123, Lima" />
+            </div>
+            <div className="form-group">
+              <label>Placa del vehículo</label>
+              <input
+                value={form.placa}
+                onChange={e => handleChange('placa', e.target.value.toUpperCase())}
+                placeholder="ABC-123"
+                maxLength={10}
+              />
             </div>
             <div className="form-group full">
               <label>Notas</label>

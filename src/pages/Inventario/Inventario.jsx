@@ -68,6 +68,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
   const [mostrarStockBajo, setMostrarStockBajo] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [guardando, setGuardando] = useState(false);
+  const [actualizando, setActualizando] = useState(false); // 🆕 refresco manual del inventario
 
   // Form data base
   // 🆕 Ya NO incluye descuento_porcentaje — el descuento se decide en el
@@ -91,6 +92,10 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
   const [procesandoImagen, setProcesandoImagen] = useState(false);
   const [errorImagen, setErrorImagen] = useState('');
   const [modoNegocio, setModoNegocio] = useState('LUBRICENTRO');
+  // 🆕 Resultado de verificar si el código ya está registrado:
+  // null = todavía no se verificó (o el código cambió después de verificar)
+  // { existe: true, producto } | { existe: false } | { existe: null, mensaje }
+  const [verificacionCodigo, setVerificacionCodigo] = useState(null);
 
   useEffect(() => {
     cargarProductos();
@@ -170,6 +175,21 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
     setFormData(f => ({ ...f, imagen_url: null }));
   };
 
+  // 🆕 Verifica si el código ya está registrado en otro producto (coincidencia
+  // exacta), para no crear productos duplicados por error.
+  const verificarCodigo = () => {
+    const codigo = formData.codigo.trim();
+    if (!codigo) {
+      setVerificacionCodigo({ existe: null, mensaje: 'Escribe un código primero' });
+      return;
+    }
+    const encontrado = productos.find(p =>
+      p.codigo.trim().toLowerCase() === codigo.toLowerCase() &&
+      p.id !== productoEditando?.id // al editar, no debe chocar contra sí mismo
+    );
+    setVerificacionCodigo(encontrado ? { existe: true, producto: encontrado } : { existe: false });
+  };
+
   const abrirModalNuevo = () => {
     if (modoSoloLectura) {
       mostrarMensaje('error', 'Activa tu licencia para agregar productos');
@@ -193,6 +213,7 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       precio_compra: '',
     });
     setErrorImagen('');
+    setVerificacionCodigo(null);
     setMostrarModal(true);
   };
 
@@ -238,12 +259,14 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
       precio_compra: (producto.precio_compra || 0).toString(),
     });
     setErrorImagen('');
+    setVerificacionCodigo(null);
     setMostrarModal(true);
   };
 
   const cerrarModal = () => {
     setMostrarModal(false);
     setProductoEditando(null);
+    setVerificacionCodigo(null);
   };
 
   const handleSubmit = async (e) => {
@@ -354,6 +377,25 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
     setTimeout(() => setMensaje({ tipo: '', texto: '' }), 3000);
   };
 
+  // 🆕 Refresco manual: vuelve a traer productos y categorías desde la base
+  // de datos y regresa a la vista normal. Pensado para usar después de
+  // registrar varios productos seguidos, por si la lista en pantalla se
+  // quedó desactualizada.
+  const actualizarInventario = async () => {
+    setActualizando(true);
+    setMostrarStockBajo(false);
+    setMostrarPorVencer(false);
+    try {
+      await Promise.all([cargarProductos(), cargarCategorias()]);
+      mostrarMensaje('success', 'Inventario actualizado');
+    } catch (error) {
+      console.error('Error al actualizar inventario:', error);
+      mostrarMensaje('error', 'No se pudo actualizar el inventario');
+    } finally {
+      setActualizando(false);
+    }
+  };
+
   const cargarProductosPorVencer = async () => {
     if (mostrarPorVencer) {
       setMostrarPorVencer(false); // toggle: si ya estaba activo, lo apago
@@ -418,6 +460,14 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
             </select>
           </div>
           <div className="toolbar-right">
+            <button
+              onClick={actualizarInventario}
+              className="btn-actualizar-inventario"
+              disabled={actualizando}
+              title="Vuelve a cargar productos y categorías desde la base de datos"
+            >
+              {actualizando ? 'Actualizando...' : '🔄 Actualizar'}
+            </button>
             <button onClick={() => { setMostrarStockBajo(false); setMostrarPorVencer(false); cargarProductos(); }} className="btn-todos">
               Todos
             </button>
@@ -576,12 +626,33 @@ function Inventario({ usuario, onVolver, modoSoloLectura }) {
               <div className="form-row">
                 <div className="form-group">
                   <label>Código *</label>
-                  <input
-                    type="text"
-                    value={formData.codigo}
-                    onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                    required
-                  />
+                  <div className="codigo-con-verificar">
+                    <input
+                      type="text"
+                      value={formData.codigo}
+                      onChange={(e) => {
+                        setFormData({ ...formData, codigo: e.target.value });
+                        setVerificacionCodigo(null); // el código cambió — la verificación anterior ya no vale
+                      }}
+                      required
+                    />
+                    <button type="button" className="btn-verificar-codigo" onClick={verificarCodigo}>
+                      Verificar
+                    </button>
+                  </div>
+                  {verificacionCodigo?.existe === true && (
+                    <small className="codigo-verificacion codigo-existe">
+                      ⚠ Ya existe: {verificacionCodigo.producto.nombre} (código {verificacionCodigo.producto.codigo})
+                    </small>
+                  )}
+                  {verificacionCodigo?.existe === false && (
+                    <small className="codigo-verificacion codigo-disponible">
+                      ✓ Código disponible
+                    </small>
+                  )}
+                  {verificacionCodigo?.existe === null && (
+                    <small className="codigo-verificacion codigo-vacio">{verificacionCodigo.mensaje}</small>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Categoría *</label>

@@ -11,6 +11,7 @@ function POS({ usuario, onVolver, modoSoloLectura }) {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('TODAS');
   const [categorias, setCategorias] = useState([]);
   const [buscando, setBuscando] = useState(false);
+  const [actualizandoProductos, setActualizandoProductos] = useState(false); // 🆕 refresco manual del catálogo
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [montoRecibido, setMontoRecibido] = useState('');
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
@@ -20,6 +21,7 @@ function POS({ usuario, onVolver, modoSoloLectura }) {
   const [tipoComprobanteElegido, setTipoComprobanteElegido] = useState(null); // null | 'BOLETA' | 'FACTURA'
   const [documentoCliente, setDocumentoCliente] = useState('');
   const [nombreCliente, setNombreCliente] = useState('');
+  const [placaVehiculo, setPlacaVehiculo] = useState(''); // 🆕 Placa del vehículo (lubricentro), opcional
   // 🆕 Selector de cliente guardado (para no escribir DNI/RUC a mano cada vez)
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null); // cliente elegido de la lista, o null
   const [busquedaCliente, setBusquedaCliente] = useState('');
@@ -78,6 +80,25 @@ function POS({ usuario, onVolver, modoSoloLectura }) {
       setCategorias(['TODAS', ...cats]);
     } catch (error) {
       console.error('Error al cargar categorías:', error);
+    }
+  };
+
+  // 🆕 Refresco manual del catálogo — vuelve a traer productos y categorías
+  // desde la base de datos y limpia la búsqueda/filtro actual, por si el
+  // listado quedó desactualizado después de registrar varios productos.
+  const actualizarCatalogo = async () => {
+    setActualizandoProductos(true);
+    setCodigoBuscar('');
+    setCategoriaSeleccionada('TODAS');
+    try {
+      await Promise.all([cargarProductos(), cargarCategorias()]);
+      mostrarMensaje('success', 'Catálogo actualizado');
+    } catch (error) {
+      console.error('Error al actualizar catálogo:', error);
+      mostrarMensaje('error', 'No se pudo actualizar el catálogo');
+    } finally {
+      setActualizandoProductos(false);
+      inputCodigoRef.current?.focus();
     }
   };
 
@@ -184,13 +205,18 @@ const getStockTexto = (stock, unidadMedida) => {
         mostrarMensaje('error', 'Error al cargar tallas');
       }
     } else if (producto.unidad_medida && producto.unidad_medida !== 'UNIDAD') {
-      // 🆕 Producto por peso/volumen: pedir la cantidad exacta antes de agregar
-      const claveCarrito = `${producto.id}`;
-      const yaEnCarrito = carrito.find(item => item.claveCarrito === claveCarrito);
-      setInputCantidadPeso(yaEnCarrito ? yaEnCarrito.cantidad.toString() : '');
+      // 🆕 Producto por peso/volumen: pedir la cantidad a agregar. Si el
+      // producto ya está en el carrito, esto se SUMA a lo que ya hay
+      // (no reemplaza), igual que pasa con los productos por unidad.
+      setInputCantidadPeso('');
       setModalCantidadPeso({ producto });
     } else {
       agregarAlCarrito(producto, null, null);
+      // 🆕 Al agregar por clic en la tarjeta (no por código escaneado/escrito),
+      // el foco se quedaba en la tarjeta — el cajero tenía que volver a hacer
+      // clic en el campo de código para seguir registrando. Ahora el cursor
+      // vuelve solo ahí, igual que ya pasa al escanear un código.
+      inputCodigoRef.current?.focus();
     }
   };
 
@@ -206,6 +232,7 @@ const getStockTexto = (stock, unidadMedida) => {
     setTipoComprobanteElegido(null);
     setDocumentoCliente('');
     setNombreCliente('');
+    setPlacaVehiculo('');
     setResultadoComprobante(null);
     setClienteSeleccionado(null);
     setBusquedaCliente('');
@@ -241,6 +268,7 @@ const getStockTexto = (stock, unidadMedida) => {
     setDropdownClienteVisible(false);
     setDocumentoCliente(cliente.numero_documento || '');
     setNombreCliente(cliente.nombre || '');
+    setPlacaVehiculo(cliente.placa || ''); // 🆕 autocompleta la placa guardada del cliente
   };
 
   const quitarClienteSeleccionado = () => {
@@ -249,6 +277,7 @@ const getStockTexto = (stock, unidadMedida) => {
     setResultadosClientes([]);
     setDocumentoCliente('');
     setNombreCliente('');
+    setPlacaVehiculo('');
   };
 
   // 🆕 La venta recién se guarda acá — cuando el cajero confirma "Continuar"
@@ -310,6 +339,7 @@ const getStockTexto = (stock, unidadMedida) => {
             cliente_id: clienteSeleccionado?.id || null,
             cliente_documento: doc || null,
             cliente_nombre: nombreCliente.trim() || null,
+            placa: placaVehiculo.trim() || null,
             items: modalComprobante.items,
             total: modalComprobante.total,
           },
@@ -335,6 +365,7 @@ const getStockTexto = (stock, unidadMedida) => {
     setTipoComprobanteElegido(null);
     setDocumentoCliente('');
     setNombreCliente('');
+    setPlacaVehiculo('');
     setClienteSeleccionado(null);
     setBusquedaCliente('');
     setResultadosClientes([]);
@@ -353,6 +384,7 @@ const getStockTexto = (stock, unidadMedida) => {
     setTipoComprobanteElegido(null);
     setDocumentoCliente('');
     setNombreCliente('');
+    setPlacaVehiculo('');
     setClienteSeleccionado(null);
     setBusquedaCliente('');
     setResultadosClientes([]);
@@ -369,17 +401,20 @@ const getStockTexto = (stock, unidadMedida) => {
       return;
     }
     const producto = modalCantidadPeso.producto;
-    if (cantidad > producto.stock) {
+    const claveCarrito = `${producto.id}`;
+    const yaEnCarrito = carrito.find(item => item.claveCarrito === claveCarrito);
+    // 🆕 Si el producto ya está en el carrito, lo ingresado se SUMA a lo que
+    // ya hay (no lo reemplaza) — igual que los productos por unidad/talla.
+    const cantidadTotal = yaEnCarrito ? yaEnCarrito.cantidad + cantidad : cantidad;
+    if (cantidadTotal > producto.stock) {
       mostrarMensaje('error', `Solo hay ${formatearNumero(producto.stock)} ${producto.unidad_medida.toLowerCase()} en stock`);
       return;
     }
-    const claveCarrito = `${producto.id}`;
-    const yaEnCarrito = carrito.find(item => item.claveCarrito === claveCarrito);
     let seAgrego = true;
     if (yaEnCarrito) {
-      modificarCantidad(claveCarrito, cantidad);
+      modificarCantidad(claveCarrito, cantidadTotal);
     } else {
-      seAgrego = agregarAlCarrito(producto, null, null, null, cantidad);
+      seAgrego = agregarAlCarrito(producto, null, null, null, cantidadTotal);
     }
     setModalCantidadPeso(null);
     setInputCantidadPeso('');
@@ -673,9 +708,19 @@ const getStockTexto = (stock, unidadMedida) => {
           </div>
 
           <div className="lista-productos">
-            <h3>Productos Disponibles</h3>
-            
-            
+            <div className="lista-productos-header">
+              <h3>Productos Disponibles</h3>
+              <button
+                type="button"
+                onClick={actualizarCatalogo}
+                className="btn-actualizar-pos"
+                disabled={actualizandoProductos}
+                title="Vuelve a cargar productos y categorías desde la base de datos"
+              >
+                {actualizandoProductos ? 'Actualizando...' : '🔄 Actualizar'}
+              </button>
+            </div>
+
           <div className="productos-grid">
             {productosFiltrados.map(producto => {
               const sinStock   = producto.stock === 0;
@@ -1026,7 +1071,7 @@ const getStockTexto = (stock, unidadMedida) => {
                   </button>
                   <button
                     className={`comprobante-opcion ${tipoComprobanteElegido === 'BOLETA' ? 'activa' : ''}`}
-                    onClick={() => setTipoComprobanteElegido('BOLETA')}
+                    onClick={() => { setTipoComprobanteElegido('BOLETA'); setNombreCliente(''); }}
                     disabled={!facturacionConfigurada}
                   >
                     Boleta
@@ -1042,12 +1087,16 @@ const getStockTexto = (stock, unidadMedida) => {
 
                 {tipoComprobanteElegido && (
                   <div className="comprobante-datos-cliente">
-                    {/* 🆕 Buscar un cliente ya registrado, para no escribir sus datos a mano */}
+                    {/* 🆕 Buscar un cliente ya registrado, para no escribir sus datos a mano.
+                        Diseño a propósito distinto de los campos de relleno de abajo (fondo celeste,
+                        ícono de lupa, borde punteado) para que el cajero no lo confunda con un campo
+                        más donde "hay que escribir datos nuevos" — este es para BUSCAR, no para llenar. */}
+                    <label className="buscador-cliente-label">🔍 Buscar cliente ya registrado</label>
                     <div className="buscador-cliente-wrap">
                       <input
                         type="text"
                         className="buscador-cliente-input"
-                        placeholder="Buscar cliente guardado por nombre o documento..."
+                        placeholder="Nombre, DNI o RUC..."
                         value={busquedaCliente}
                         onChange={(e) => buscarClientes(e.target.value)}
                         onFocus={() => { if (resultadosClientes.length > 0) setDropdownClienteVisible(true); }}
@@ -1070,6 +1119,9 @@ const getStockTexto = (stock, unidadMedida) => {
                       )}
                     </div>
 
+                    {/* 🆕 A partir de acá, campos normales de RELLENO — solo para cuando el cliente
+                        NO está registrado (si ya se eligió uno arriba, sus datos ya están puestos
+                        y no hace falta escribirlos de nuevo). */}
                     <input
                       type="text"
                       placeholder={tipoComprobanteElegido === 'FACTURA' ? 'RUC (11 dígitos)' : 'DNI (opcional)'}
@@ -1077,11 +1129,25 @@ const getStockTexto = (stock, unidadMedida) => {
                       onChange={(e) => setDocumentoCliente(e.target.value.replace(/\D/g, ''))}
                       maxLength={tipoComprobanteElegido === 'FACTURA' ? 11 : 8}
                     />
+                    {/* Nombre (Boleta) / Razón social (Factura): solo si NO hay cliente guardado
+                        seleccionado — si ya lo eligió del buscador, mostrarlo sería duplicado.
+                        En Factura sigue siendo obligatorio para que sea válida ante SUNAT; en
+                        Boleta es opcional (el consumidor final no está obligado a darlo). */}
+                    {!clienteSeleccionado && (
+                      <input
+                        type="text"
+                        placeholder={tipoComprobanteElegido === 'FACTURA' ? 'Razón social' : 'Nombre'}
+                        value={nombreCliente}
+                        onChange={(e) => setNombreCliente(e.target.value)}
+                      />
+                    )}
+                    {/* 🆕 Placa del vehículo (lubricentro) — opcional, se imprime junto a cada producto en el comprobante */}
                     <input
                       type="text"
-                      placeholder={tipoComprobanteElegido === 'FACTURA' ? 'Razón social' : 'Nombre (opcional)'}
-                      value={nombreCliente}
-                      onChange={(e) => setNombreCliente(e.target.value)}
+                      placeholder="Placa del vehículo (opcional)"
+                      value={placaVehiculo}
+                      onChange={(e) => setPlacaVehiculo(e.target.value.toUpperCase())}
+                      maxLength={10}
                     />
                   </div>
                 )}

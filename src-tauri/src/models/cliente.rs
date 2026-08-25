@@ -14,6 +14,7 @@ pub struct Cliente {
     pub telefono: Option<String>,
     pub email: Option<String>,
     pub direccion: Option<String>,
+    pub placa: Option<String>, // 🆕 placa del vehículo (lubricentro)
     pub notas: Option<String>,
     pub activo: bool,
 }
@@ -26,6 +27,7 @@ pub struct ClienteNuevo {
     pub telefono: Option<String>,
     pub email: Option<String>,
     pub direccion: Option<String>,
+    pub placa: Option<String>, // 🆕 placa del vehículo (lubricentro)
     pub notas: Option<String>,
 }
 

@@ -932,6 +932,7 @@ if !sql_productos.contains("'METRO'") {
                 telefono TEXT,
                 email TEXT,
                 direccion TEXT,
+                placa TEXT,
                 notas TEXT,
                 activo INTEGER DEFAULT 1,
                 fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),
@@ -942,6 +943,24 @@ if !sql_productos.contains("'METRO'") {
              CREATE INDEX idx_clientes_activo ON clientes(activo);"
         )?;
         println!("Tabla clientes creada");
+    }
+
+    // 🆕 Migración: columna placa en clientes (placa del vehículo del cliente,
+    // para no tener que volver a escribirla cada vez que vuelve al lubricentro
+    // y se le emite boleta/factura). Additive — instalaciones que ya tenían la
+    // tabla clientes (sin esta columna) la reciben acá.
+    let has_placa_cliente: bool = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('clientes') WHERE name='placa'",
+            [],
+            |row| Ok(row.get::<_, i32>(0)? > 0),
+        )
+        .unwrap_or(false);
+
+    if !has_placa_cliente {
+        println!("Agregando columna placa a clientes...");
+        conn.execute("ALTER TABLE clientes ADD COLUMN placa TEXT", [])?;
+        println!("Columna placa agregada");
     }
 
     // 🆕 Migración: columna cliente_id en comprobantes_electronicos (referencia

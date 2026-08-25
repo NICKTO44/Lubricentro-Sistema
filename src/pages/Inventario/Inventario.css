@@ -103,7 +103,7 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.btn-todos, .btn-stock-bajo, .btn-nuevo {
+.btn-todos, .btn-stock-bajo, .btn-nuevo, .btn-actualizar-inventario {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -121,6 +121,11 @@
 .btn-por-vencer-activo:hover { background: #b91c1c !important; }
 .btn-nuevo { background: #10B981; color: white; }
 .btn-nuevo:hover { background: #059669; }
+
+/* 🆕 Refresco manual del inventario */
+.btn-actualizar-inventario { background: #3B82F6; color: white; }
+.btn-actualizar-inventario:hover { background: #2563EB; }
+.btn-actualizar-inventario:disabled { background: #93C5FD; cursor: not-allowed; }
 
 /* MENSAJES */
 .mensaje {
@@ -366,6 +371,41 @@
 }
 
 .form-group textarea { resize: vertical; font-family: inherit; }
+
+/* 🆕 Botón "Verificar" junto al campo Código, para chequear duplicados */
+.codigo-con-verificar {
+  display: flex;
+  gap: 8px;
+}
+
+.codigo-con-verificar input { flex: 1; }
+
+.btn-verificar-codigo {
+  flex-shrink: 0;
+  padding: 0 16px;
+  border: 1px solid #3B82F6;
+  border-radius: 8px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-verificar-codigo:hover { background: #DBEAFE; }
+
+.codigo-verificacion {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.codigo-existe { color: #B45309; }
+.codigo-disponible { color: #15803D; }
+.codigo-vacio { color: #6B7280; }
 
 .form-actions {
   display: flex;

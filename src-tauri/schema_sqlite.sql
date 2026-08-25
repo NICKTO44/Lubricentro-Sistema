@@ -296,6 +296,7 @@ CREATE TABLE clientes (
   telefono TEXT,
   email TEXT,
   direccion TEXT,
+  placa TEXT,                     -- placa del vehículo del cliente (lubricentro)
   notas TEXT,
   activo INTEGER DEFAULT 1,
   fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),

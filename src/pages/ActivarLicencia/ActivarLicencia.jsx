@@ -90,7 +90,7 @@ function ActivarLicencia({ onActivacionExitosa, estadoLicencia }) {
         <div className="activar-header">
           <div className="activar-logo"><IconKey size={30} stroke={1.8} /></div>
           <h1>Sistema de Gestión POS</h1>
-          <p className="activar-version">v1.1.4</p>
+          <p className="activar-version">v1.1.5</p>
         </div>
 
         {/* Estado actual */}

@@ -39,6 +39,14 @@ pub struct EmitirComprobanteRequest {
     pub cliente_nombre: Option<String>,
     pub items: Vec<ItemComprobante>,
     pub total: f64,
+    // 🆕 Placa del vehículo (lubricentro). Opcional — no todas las ventas son
+    // por un vehículo. Se manda como "dato adicional" del ítem con el código
+    // 5010 del catálogo de FacturaLibre ("Numero de Placa"), confirmado en su
+    // documentación oficial (ejemplo "Factura - Datos Adicionales Item (placa)":
+    // https://documenter.getpostman.com/view/6435177/TVRrUPuD). Se repite en
+    // todos los ítems de la venta para que aparezca junto a cada producto en
+    // el PDF, ya que el dato va por ítem, no a nivel de todo el comprobante.
+    pub placa: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -134,12 +142,15 @@ pub fn emitir_comprobante_electronico(
 
     // 3. Armar los items en el formato de FacturaLibre (valor sin IGV + IGV separado)
     let porcentaje_igv = 18.0;
+    // 🆕 Placa del vehículo, si se ingresó. Va en cada ítem como "dato adicional"
+    // (catálogo FacturaLibre, código 5010 = "Numero de Placa").
+    let placa_limpia = request.placa.as_deref().map(|p| p.trim()).filter(|p| !p.is_empty());
     let items_json: Vec<serde_json::Value> = request.items.iter().map(|item| {
         let valor_unitario = item.precio_unitario / (1.0 + porcentaje_igv / 100.0);
         let total_item_val = item.precio_unitario * item.cantidad;
         let base_igv = valor_unitario * item.cantidad;
         let igv_item = total_item_val - base_igv;
-        serde_json::json!({
+        let mut item_json = serde_json::json!({
             "codigo_interno": item.codigo,
             "descripcion": item.descripcion,
             "codigo_producto_sunat": CODIGO_PRODUCTO_SUNAT_GENERICO,
@@ -155,7 +166,17 @@ pub fn emitir_comprobante_electronico(
             "total_impuestos": (igv_item * 100.0).round() / 100.0,
             "total_valor_item": (base_igv * 100.0).round() / 100.0,
             "total_item": (total_item_val * 100.0).round() / 100.0,
-        })
+        });
+        if let Some(placa) = placa_limpia {
+            item_json["datos_adicionales"] = serde_json::json!([
+                {
+                    "codigo": "5010",
+                    "descripcion": "Numero de Placa",
+                    "valor": placa,
+                }
+            ]);
+        }
+        item_json
     }).collect();
 
     let total_gravada = request.total / (1.0 + porcentaje_igv / 100.0);
@@ -175,6 +196,14 @@ pub fn emitir_comprobante_electronico(
         // campo el insert falla con "SQLSTATE[23000]... Column 'date_of_due'
         // cannot be null". Venta al contado en el POS → vencimiento = misma
         // fecha de emisión (igual que su ejemplo "Boleta Gravada - Contingencia").
+        // ⚠️ Confirmado en TODOS los ejemplos de su documentación pública
+        // (Factura, Boleta, Boleta Contingencia, Factura Exportación): este
+        // campo siempre está presente — no se puede omitir del payload. Y la
+        // línea "FECHA DE VENCIMIENTO" que se ve en el PDF la imprime la
+        // plantilla fija de FacturaLibre — no hay forma de ocultarla desde acá
+        // (no existe ningún parámetro para eso en su API). Si de verdad no debe
+        // aparecer, la única salida es dejar de usar el PDF de FacturaLibre como
+        // comprobante impreso y generar uno propio con los datos de la respuesta.
         "fecha_de_vencimiento": fecha_emision,
         "datos_del_cliente_o_receptor": {
             "codigo_tipo_documento_identidad": cliente_tipo_doc,
